@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import officialWordsData from '../data/sotp_spelling_words.json';
+import { getActiveWords } from '../services/wordService';
+import { useLicenseStore } from './licenseStore';
 import {
   WordRecord,
   InputMode,
@@ -344,12 +346,15 @@ export const useSpellingStore = create<SpellingState>()(
 
       startDailySession: (batchSizeOverride?: number) => {
         const state = get();
-        const batchSize = batchSizeOverride || state.settings.dailyGoal || 30;
+        const isPro = useLicenseStore.getState().isProUnlocked;
+        const activeWordList = getActiveWords(isPro);
+        const activeKeysSet = new Set(activeWordList.map((w) => w.toLowerCase()));
+
+        // Collect candidates restricted to active words (100 for Free, 1604 for Pro)
+        const allWords = Object.values(state.words).filter((w) => activeKeysSet.has(w.id));
+        const batchSize = Math.min(allWords.length, batchSizeOverride || state.settings.dailyGoal || 30);
         const missedTargetCount = Math.round(batchSize * 0.3); // 30% from Missed Vault
         const unmasteredTargetCount = batchSize - missedTargetCount; // 70% unmastered/unseen
-
-        // Collect candidates
-        const allWords = Object.values(state.words);
         const missedVault = allWords
           .filter((w) => w.incorrectCount > 0 && w.status !== 'mastered')
           .sort((a, b) => b.incorrectCount - a.incorrectCount);
@@ -442,7 +447,8 @@ export const useSpellingStore = create<SpellingState>()(
           ...(customConfig || {}),
         };
 
-        const allWords = [...state.wordList];
+        const isPro = useLicenseStore.getState().isProUnlocked;
+        const allWords = getActiveWords(isPro);
         const shuffle = <T>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
         const shuffled = shuffle(allWords);
 

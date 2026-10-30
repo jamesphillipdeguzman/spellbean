@@ -13,9 +13,12 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
+import { useLicenseStore } from '../store/licenseStore';
+import { getActiveWords, TOTAL_OFFICIAL_WORDS, FREE_TIER_WORD_LIMIT } from '../services/wordService';
 import { WordRecord } from '../types';
 import { WordModal } from './WordModal';
 import { ImportWordsModal } from './ImportWordsModal';
+import { UnlockProModal } from './UnlockProModal';
 import { audioService } from '../services/audio';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -23,6 +26,14 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 export const WordBank: React.FC = () => {
   const store = useSpellingStore();
   const { words, wordList, settings, startDailySession } = store;
+  const isPro = useLicenseStore((s) => s.isProUnlocked);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+
+  const activeWordList = useMemo(() => getActiveWords(isPro), [isPro]);
+  const activeKeys = useMemo(
+    () => new Set(activeWordList.map((w) => w.toLowerCase())),
+    [activeWordList]
+  );
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'unseen' | 'learning' | 'mastered' | 'starred'>('all');
@@ -31,9 +42,9 @@ export const WordBank: React.FC = () => {
   const [selectedWordForModal, setSelectedWordForModal] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
-  // Filter & Sort calculation
+  // Filter & Sort calculation - restricted to active words
   const filteredWords = useMemo(() => {
-    let result = Object.values(words);
+    let result = Object.values(words).filter((w) => activeKeys.has(w.id));
 
     // Filter by status / starred
     if (selectedStatus === 'unseen') {
@@ -71,7 +82,7 @@ export const WordBank: React.FC = () => {
     });
 
     return result;
-  }, [words, selectedStatus, selectedLetter, searchTerm, sortBy]);
+  }, [words, activeKeys, selectedStatus, selectedLetter, searchTerm, sortBy]);
 
   const handlePronounce = (word: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -83,7 +94,10 @@ export const WordBank: React.FC = () => {
     });
   };
 
-  const allRecords = Object.values(words);
+  const allRecords = useMemo(
+    () => Object.values(words).filter((w) => activeKeys.has(w.id)),
+    [words, activeKeys]
+  );
   const masteredCount = allRecords.filter((w) => w.status === 'mastered').length;
   const learningCount = allRecords.filter((w) => w.status === 'learning').length;
   const unseenCount = allRecords.filter((w) => w.status === 'unseen').length;
@@ -103,7 +117,9 @@ export const WordBank: React.FC = () => {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-warm-500 dark:text-warm-400 mt-1">
-              1,604-word study list referenced from the 2026 Student Convention Guidelines.
+              {isPro
+                ? '1,604-word competition study list referenced from the 2026 Student Convention Guidelines.'
+                : '100-word free preview sample (of 1,604) referenced from the 2026 Student Convention Guidelines.'}
             </p>
           </div>
 
@@ -116,7 +132,7 @@ export const WordBank: React.FC = () => {
               <span>Import Words (CSV/Excel/PDF)</span>
             </button>
             <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-              {masteredCount} of {wordList.length} Mastered ({wordList.length > 0 ? Math.round((masteredCount / wordList.length) * 100) : 0}%)
+              {masteredCount} of {activeWordList.length} Mastered ({activeWordList.length > 0 ? Math.round((masteredCount / activeWordList.length) * 100) : 0}%)
             </span>
           </div>
         </div>
@@ -125,17 +141,17 @@ export const WordBank: React.FC = () => {
         <div className="w-full bg-warm-100 dark:bg-warm-800 h-2.5 rounded-full overflow-hidden flex">
           <div
             className="bg-emerald-500 h-full"
-            style={{ width: `${(masteredCount / 1604) * 100}%` }}
+            style={{ width: `${activeWordList.length > 0 ? (masteredCount / activeWordList.length) * 100 : 0}%` }}
             title={`Mastered: ${masteredCount}`}
           />
           <div
             className="bg-amber-500 h-full"
-            style={{ width: `${(learningCount / 1604) * 100}%` }}
+            style={{ width: `${activeWordList.length > 0 ? (learningCount / activeWordList.length) * 100 : 0}%` }}
             title={`Learning: ${learningCount}`}
           />
           <div
             className="bg-warm-300 dark:bg-warm-700 h-full"
-            style={{ width: `${(unseenCount / 1604) * 100}%` }}
+            style={{ width: `${activeWordList.length > 0 ? (unseenCount / activeWordList.length) * 100 : 0}%` }}
             title={`Unseen: ${unseenCount}`}
           />
         </div>
@@ -146,7 +162,7 @@ export const WordBank: React.FC = () => {
         {/* Status Pills */}
         <div className="flex flex-wrap items-center gap-2">
           {[
-            { id: 'all', label: `All (${wordList.length})` },
+            { id: 'all', label: `All (${activeWordList.length})` },
             { id: 'unseen', label: `Unseen (${unseenCount})` },
             { id: 'learning', label: `Learning (${learningCount})` },
             { id: 'mastered', label: `Mastered (${masteredCount})` },
@@ -222,8 +238,12 @@ export const WordBank: React.FC = () => {
       </div>
 
       {/* Words Count & Results Info */}
-      <div className="flex items-center justify-between text-xs text-warm-500 dark:text-warm-400 px-2">
-        <span>Showing {filteredWords.length} words</span>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-warm-500 dark:text-warm-400 px-2 gap-1">
+        <span>
+          {isPro
+            ? `Showing ${filteredWords.length} words`
+            : `Showing ${filteredWords.length} of 1,604 official competition words (Free Tier)`}
+        </span>
         {selectedLetter && (
           <span>
             Filtered by letter: <strong>{selectedLetter}</strong>
@@ -275,6 +295,22 @@ export const WordBank: React.FC = () => {
         })}
       </div>
 
+      {/* Free Tier Gating Banner */}
+      {!isPro && (
+        <div className="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left mt-4 shadow-lg">
+          <div>
+            <div className="font-bold text-white text-sm">Unlock the Remaining 1,504 Competition Words</div>
+            <div className="text-xs text-slate-400 mt-0.5">Get complete access to the entire SOTP 2026 Student Convention spelling syllabus.</div>
+          </div>
+          <button
+            onClick={() => setShowUnlockModal(true)}
+            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold text-xs rounded-xl transition-all shadow-md shrink-0 cursor-pointer"
+          >
+            Unlock Lifetime Pro (₱399)
+          </button>
+        </div>
+      )}
+
       {/* Word Detail Modal */}
       {selectedWordForModal && (
         <WordModal
@@ -288,6 +324,13 @@ export const WordBank: React.FC = () => {
       <ImportWordsModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
+      />
+
+      {/* Unlock Pro Modal */}
+      <UnlockProModal
+        isOpen={showUnlockModal}
+        onClose={() => setShowUnlockModal(false)}
+        reason="Unlock all 1,604 competition words from the 2026 Student Convention spelling syllabus."
       />
     </div>
   );

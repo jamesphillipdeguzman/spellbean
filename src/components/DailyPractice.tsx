@@ -17,6 +17,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
+import { useLicenseStore } from '../store/licenseStore';
 import { ProctorVoiceControls } from './ProctorVoiceControls';
 import { DiffViewer } from './DiffViewer';
 import { audioService } from '../services/audio';
@@ -43,6 +44,7 @@ export const DailyPractice: React.FC = () => {
     updateSettings,
     setActiveTab,
   } = store;
+  const isPro = useLicenseStore((s) => s.isProUnlocked);
 
   // Local state for current word attempt
   const [typedInput, setTypedInput] = useState('');
@@ -282,7 +284,7 @@ export const DailyPractice: React.FC = () => {
             </div>
             <div>
               <span className="text-xs text-amber-200 block">Mastered (3x)</span>
-              <span className="text-2xl font-black">{masteredCount} / 1,604</span>
+              <span className="text-2xl font-black">{masteredCount} / {isPro ? '1,604' : '100'}</span>
             </div>
             <div>
               <span className="text-xs text-amber-200 block">Remaining</span>

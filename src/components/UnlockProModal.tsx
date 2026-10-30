@@ -9,6 +9,7 @@ import {
   Zap,
   ArrowRight,
   Lock,
+  BookOpen,
 } from 'lucide-react';
 import { useLicenseStore } from '../store/licenseStore';
 import { BrainAiFlashLine } from './icons/BrainAiFlashLine';
@@ -137,6 +138,20 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
               </span>
               <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed mt-0.5">
                 Parse school bee wordlists directly from Excel workbooks (.xlsx) and PDF competition booklets.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/80 dark:bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-base font-bold text-slate-100 dark:text-white block">
+                Full 1,604 SOTP Word Syllabus
+              </span>
+              <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed mt-0.5">
+                Unlocks all 1,604 convention competition words across all rounds, removing the 100-word free preview limit.
               </p>
             </div>
           </div>

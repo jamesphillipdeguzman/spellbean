@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
       id: 'wordbank',
       label: 'Word Bank',
       icon: BookOpen,
-      badge: '1,604',
+      badge: isProUnlocked ? '1,604' : '100',
       badgeColor: 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300',
     },
     {
@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
                   Spellbean
                 </span>
                 <span className="hidden md:inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40">
-                  STUDY COMPANION • 1,604 WORDS
+                  STUDY COMPANION • {isProUnlocked ? '1,604 WORDS' : '100 / 1,604 WORDS'}
                 </span>
               </div>
               <p className="text-[11px] text-warm-500 dark:text-warm-400 font-medium">
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
               title="Words Mastered (3 consecutive error-free recalls)"
             >
               <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{masteredCount} / 1,604</span>
+              <span>{masteredCount} / {isProUnlocked ? '1,604' : '100'}</span>
             </div>
 
             {/* Spellbean Pro Badge / Upgrade CTA */}
