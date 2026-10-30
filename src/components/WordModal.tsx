@@ -61,6 +61,7 @@ export const WordModal: React.FC<WordModalProps> = ({
   const settings = useSpellingStore((s) => s.settings);
   const toggleMissedVaultWord = useSpellingStore((s) => s.toggleMissedVaultWord);
   const isProUnlocked = useLicenseStore((s) => s.isProUnlocked);
+  const selectedProctorVoice = settings.selectedVoiceURI;
 
   // Pro gate modal
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -97,31 +98,55 @@ export const WordModal: React.FC<WordModalProps> = ({
     }
   }, []);
 
-  const getSelectedVoice = (): SpeechSynthesisVoice | null => {
+  const resolveActiveVoice = (): SpeechSynthesisVoice | null => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
     const voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) return null;
 
-    const uri = settings.selectedVoiceURI || 'en-PH-JamesNeural';
-    if (!isNeuralVoice(uri)) {
-      const match = voices.find((v) => v.voiceURI === uri || v.name === uri);
+    // 1. If Pro is active, match the specific neural voice or localized proctor
+    if (isProUnlocked && selectedProctorVoice) {
+      const match = voices.find(
+        (v) =>
+          v.name.toLowerCase().includes(selectedProctorVoice.toLowerCase()) ||
+          v.voiceURI.toLowerCase().includes(selectedProctorVoice.toLowerCase())
+      );
+      if (match) return match;
+
+      // Tagalog / Philippine English fallback match
+      if (
+        selectedProctorVoice.includes('PH') ||
+        selectedProctorVoice.toLowerCase().includes('james') ||
+        selectedProctorVoice.toLowerCase().includes('rosa')
+      ) {
+        const phMatch = voices.find(
+          (v) => v.lang.startsWith('en-PH') || v.lang.startsWith('fil') || v.lang.startsWith('tl')
+        );
+        if (phMatch) return phMatch;
+      }
+
+      if (selectedProctorVoice.toLowerCase().includes('jenny')) {
+        const jennyMatch = voices.find(
+          (v) => v.name.toLowerCase().includes('jenny') || v.lang.startsWith('en-US')
+        );
+        if (jennyMatch) return jennyMatch;
+      }
+    } else if (selectedProctorVoice) {
+      const match = voices.find(
+        (v) =>
+          v.name.toLowerCase().includes(selectedProctorVoice.toLowerCase()) ||
+          v.voiceURI.toLowerCase().includes(selectedProctorVoice.toLowerCase())
+      );
       if (match) return match;
     }
 
-    // Match browser fallback voice based on selected neural voice
-    if (uri.includes('PH') || uri.includes('Rosa') || uri.includes('James')) {
-      return (
-        voices.find((v) => v.lang.startsWith('en-PH') || v.lang.startsWith('fil') || v.lang.startsWith('tl')) ||
-        voices.find((v) => v.lang.startsWith('en-US')) ||
-        voices.find((v) => v.lang.startsWith('en')) ||
-        voices[0] ||
-        null
-      );
-    }
-
+    // 2. Fallback to preferred English natural voice rather than raw system default
     return (
-      voices.find((v) => v.name.includes('Jenny') || v.lang.startsWith('en-US')) ||
-      voices.find((v) => v.lang.startsWith('en')) ||
+      voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online'))
+      ) ||
+      voices.find((v) => v.lang.startsWith('en-US')) ||
       voices[0] ||
       null
     );
@@ -234,7 +259,7 @@ export const WordModal: React.FC<WordModalProps> = ({
     }
     audioService.stop();
 
-    const selectedVoice = getSelectedVoice();
+    const activeVoice = resolveActiveVoice();
     const lettersUpper = displayWord.toUpperCase().split('');
 
     try {
@@ -284,9 +309,12 @@ export const WordModal: React.FC<WordModalProps> = ({
           };
 
           const letterUtterance = new SpeechSynthesisUtterance(lettersUpper[i]);
+          if (activeVoice) {
+            letterUtterance.voice = activeVoice;
+            letterUtterance.lang = activeVoice.lang;
+          }
           letterUtterance.rate = config.letterRate;
           letterUtterance.pitch = 1.0;
-          if (selectedVoice) letterUtterance.voice = selectedVoice;
 
           // Advance ONLY when utterance actually finishes
           letterUtterance.onend = onUtteranceEnd;
@@ -336,9 +364,12 @@ export const WordModal: React.FC<WordModalProps> = ({
         }
 
         const finalWordUtterance = new SpeechSynthesisUtterance(displayWord);
+        if (activeVoice) {
+          finalWordUtterance.voice = activeVoice;
+          finalWordUtterance.lang = activeVoice.lang;
+        }
         finalWordUtterance.rate = config.wordRate; // Natural baseline rate so it sounds smooth
         finalWordUtterance.pitch = 1.0;
-        if (selectedVoice) finalWordUtterance.voice = selectedVoice;
 
         finalWordUtterance.onend = () => {
           setIsSpellingActive(false);
