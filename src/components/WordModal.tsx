@@ -46,7 +46,7 @@ export const WordModal: React.FC<WordModalProps> = ({
   // Animated letter-by-letter spelling states
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [isSpellingActive, setIsSpellingActive] = useState(false);
-  const [speedMode, setSpeedMode] = useState<'normal' | 'slow'>('normal');
+  const [speedMode, setSpeedMode] = useState<'normal' | 'slow'>('slow');
 
   // Cancel reference to cleanly abort timeouts/intervals on close or stop
   const cancelDrillRef = useRef<(() => void) | null>(null);
@@ -57,6 +57,9 @@ export const WordModal: React.FC<WordModalProps> = ({
       cancelDrillRef.current = null;
     }
     audioService.stop();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     setIsSpellingActive(false);
     setHighlightedIndex(null);
   };
@@ -110,97 +113,138 @@ export const WordModal: React.FC<WordModalProps> = ({
   const letters: string[] = (displayWord || '').split('');
 
   const playWordAudio = () => {
+    stopSpellingDrill();
     audioService.speakText(displayWord, {
       rate: settings.speechRate,
       pitch: settings.speechPitch,
       volume: settings.speechVolume,
-      voiceURI: settings.selectedVoiceURI,
+      voiceURI: settings.selectedVoiceURI || 'en-PH-JamesNeural',
     });
   };
 
   const playOfficialCadence = () => {
+    stopSpellingDrill();
     audioService.pronounceWordOfficialCadence(displayWord, {
       rate: settings.speechRate,
       pitch: settings.speechPitch,
       volume: settings.speechVolume,
-      voiceURI: settings.selectedVoiceURI,
+      voiceURI: settings.selectedVoiceURI || 'en-PH-JamesNeural',
       pauseDurationSeconds: settings.pauseBetweenWordsSeconds,
     });
   };
 
   /**
    * Interactive Automated "Spell It Out" Drill
-   * 1. Announce whole word
-   * 2. Pause 1 second
-   * 3. Sequentially highlight each letter tile & speak the letter name
-   * 4. Conclude with full word pronunciation
+   * 1. Skip saying the full word at the start - jumps straight into spelling the letters.
+   * 2. Sequentially highlight each letter tile and await audio playback.
+   * 3. Once the final letter is spoken, wait a clean pause (approx. 600ms).
+   * 4. Pronounce the full word at the very end as the closing resolution.
    */
-  const handleStartSpellingDrill = () => {
+  const handleStartSpellingDrill = async () => {
     if (isSpellingActive) {
       stopSpellingDrill();
       return;
     }
 
+    // Explicitly cancel any pending speech synthesis
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    audioService.stop();
+
     setIsSpellingActive(true);
     setHighlightedIndex(null);
 
-    const letterDelay = speedMode === 'normal' ? 420 : 700;
     let isAborted = false;
-    const timeouts: any[] = [];
+    let sleepTimer: any = null;
+    let sleepResolve: (() => void) | null = null;
 
     cancelDrillRef.current = () => {
       isAborted = true;
-      timeouts.forEach(clearTimeout);
+      if (sleepTimer) {
+        clearTimeout(sleepTimer);
+        sleepTimer = null;
+      }
+      if (sleepResolve) {
+        sleepResolve();
+        sleepResolve = null;
+      }
+      audioService.stop();
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
     };
 
-    // Step 1: Announce word
-    audioService.speakText(displayWord, {
-      rate: settings.speechRate,
-      pitch: settings.speechPitch,
-      volume: settings.speechVolume,
-      voiceURI: settings.selectedVoiceURI,
-    });
-
-    // Step 2: 1-second pause before letter sequence
-    const startSeqTimeout = setTimeout(() => {
-      if (isAborted) return;
-
-      letters.forEach((letter: string, index: number) => {
-        const letterTimeout = setTimeout(() => {
-          if (isAborted) return;
-          setHighlightedIndex(index);
-
-          // Pronounce single letter name clearly (e.g. "A.", "B.", "C.")
-          audioService.speakText(`${letter.toUpperCase()}.`, {
-            rate: speedMode === 'normal' ? 1.0 : 0.85,
-            pitch: settings.speechPitch,
-            volume: settings.speechVolume,
-            voiceURI: settings.selectedVoiceURI,
-          });
-        }, index * letterDelay);
-
-        timeouts.push(letterTimeout);
+    const cancellableDelay = (ms: number): Promise<void> => {
+      return new Promise((resolve) => {
+        if (isAborted) {
+          resolve();
+          return;
+        }
+        sleepResolve = resolve;
+        sleepTimer = setTimeout(() => {
+          sleepTimer = null;
+          sleepResolve = null;
+          resolve();
+        }, ms);
       });
+    };
 
-      // Step 3: Conclude with final whole word pronunciation
-      const finalTimeout = setTimeout(() => {
-        if (isAborted) return;
-        setHighlightedIndex(null);
+    // Ensure effective active voice is resolved and verified
+    const activeVoice = settings.selectedVoiceURI || 'en-PH-JamesNeural';
+    // Deliberate cadence for spellers:
+    // "slow" mode (default): rate 0.85, 300ms clean gap between letters for natural pacing without overlap
+    // "normal" mode: rate 1.0, 150ms gap
+    const letterRate = speedMode === 'slow' ? 0.85 : 1.0;
+    const postLetterPause = speedMode === 'slow' ? 300 : 150;
 
-        audioService.speakText(displayWord, {
-          rate: settings.speechRate,
+    try {
+      // Step 1: Jump straight into spelling letters sequentially (no initial whole word)
+      for (let i = 0; i < letters.length; i++) {
+        if (isAborted) break;
+
+        const letter = letters[i];
+        setHighlightedIndex(i);
+
+        // Await audio playback completion (audio load & play event) for 100% tile sync
+        await audioService.speakTextAsync(`${letter.toUpperCase()}.`, {
+          rate: letterRate,
           pitch: settings.speechPitch,
           volume: settings.speechVolume,
-          voiceURI: settings.selectedVoiceURI,
+          voiceURI: activeVoice,
         });
 
+        if (isAborted) break;
+
+        // Clean pause between letter tiles without overlapping speech clips
+        if (i < letters.length - 1) {
+          await cancellableDelay(postLetterPause);
+        }
+      }
+
+      if (isAborted) return;
+
+      // Step 2: Clean pause (approx. 600ms) after final letter
+      setHighlightedIndex(null);
+      await cancellableDelay(600);
+
+      if (isAborted) return;
+
+      // Step 3: Pronounce full word at the very end as closing resolution
+      await audioService.speakTextAsync(displayWord, {
+        rate: settings.speechRate,
+        pitch: settings.speechPitch,
+        volume: settings.speechVolume,
+        voiceURI: activeVoice,
+      });
+    } catch (err) {
+      console.warn('Spelling drill ended or interrupted:', err);
+    } finally {
+      if (!isAborted) {
         setIsSpellingActive(false);
-      }, letters.length * letterDelay + 300);
-
-      timeouts.push(finalTimeout);
-    }, 1000);
-
-    timeouts.push(startSeqTimeout);
+        setHighlightedIndex(null);
+      }
+    }
   };
 
   const handleToggleVault = () => {

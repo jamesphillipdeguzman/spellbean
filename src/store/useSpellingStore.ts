@@ -656,6 +656,16 @@ export const useSpellingStore = create<SpellingState>()(
         todayCompletedCount: state.todayCompletedCount,
         mockBeeResultsHistory: state.mockBeeResultsHistory,
       }),
+      merge: (persistedState: any, currentState) => ({
+        ...currentState,
+        ...persistedState,
+        settings: {
+          ...currentState.settings,
+          ...(persistedState?.settings || {}),
+          selectedVoiceURI:
+            persistedState?.settings?.selectedVoiceURI || 'en-PH-JamesNeural',
+        },
+      }),
     }
   )
 );

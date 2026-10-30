@@ -50,6 +50,7 @@ class AudioEngine {
   private currentAudioElement: HTMLAudioElement | null = null;
   private pauseTimer: any = null;
   private audioCtx: AudioContext | null = null;
+  private isUserStopped = false;
 
   // In-memory cache for audio object URLs: key -> objectUrl
   private audioCache = new Map<string, string>();
@@ -155,16 +156,19 @@ class AudioEngine {
   }
 
   public stop() {
+    this.isUserStopped = true;
     if (this.pauseTimer) {
       clearInterval(this.pauseTimer);
       this.pauseTimer = null;
     }
-    if (this.synth) {
-      this.synth.cancel();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
     }
     if (this.currentAudioElement) {
       this.currentAudioElement.pause();
       this.currentAudioElement.currentTime = 0;
+      this.currentAudioElement.onended = null;
+      this.currentAudioElement.onerror = null;
       this.currentAudioElement = null;
     }
     this.currentUtterance = null;
@@ -203,6 +207,139 @@ class AudioEngine {
   }
 
   /**
+   * Promise-based speech that resolves when playback completes.
+   * Cancels prior speech and awaits neural audio load & play for 100% sync.
+   */
+  public async speakTextAsync(
+    text: string,
+    options: {
+      rate?: number;
+      pitch?: number;
+      volume?: number;
+      voiceURI?: string | null;
+    } = {}
+  ): Promise<void> {
+    this.stop();
+    this.isUserStopped = false;
+
+    // Explicitly cancel any pending or queued speech synthesis
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    const voiceURI = options.voiceURI || 'en-PH-JamesNeural';
+    const rate = options.rate ?? 0.85;
+    const volume = options.volume ?? 1.0;
+
+    // Check if user selected an Edge Neural Voice
+    if (isNeuralVoice(voiceURI) && typeof navigator !== 'undefined' && navigator.onLine) {
+      try {
+        await this.playNeuralSpeechAsync(text, voiceURI, rate, volume);
+        return;
+      } catch (err: any) {
+        if (this.isUserStopped) return;
+        console.warn('Neural TTS playback notice (falling back to device speech):', err);
+      }
+    }
+
+    if (this.isUserStopped) return;
+    return this.fallbackWebSpeechAsync(text, options);
+  }
+
+  private playNeuralSpeechAsync(
+    text: string,
+    voiceId: string,
+    rate: number,
+    volume: number
+  ): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const audioUrl = await this.getNeuralAudioUrl(text, voiceId, rate);
+        if (this.isUserStopped) {
+          resolve();
+          return;
+        }
+
+        const audio = new Audio(audioUrl);
+        audio.volume = Math.max(0, Math.min(1, volume));
+        this.currentAudioElement = audio;
+
+        audio.onended = () => {
+          this.currentAudioElement = null;
+          resolve();
+        };
+
+        audio.onerror = (e) => {
+          this.currentAudioElement = null;
+          if (this.isUserStopped) {
+            resolve();
+          } else {
+            reject(new Error(`Neural Audio error: ${e}`));
+          }
+        };
+
+        await audio.play();
+      } catch (err) {
+        this.currentAudioElement = null;
+        if (this.isUserStopped) {
+          resolve();
+        } else {
+          reject(err);
+        }
+      }
+    });
+  }
+
+  private fallbackWebSpeechAsync(
+    text: string,
+    options: {
+      rate?: number;
+      pitch?: number;
+      volume?: number;
+      voiceURI?: string | null;
+    }
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.synth || this.isUserStopped) {
+        resolve();
+        return;
+      }
+
+      this.synth.cancel();
+
+      const voices = this.getVoices();
+      let voice: SpeechSynthesisVoice | null = null;
+
+      if (options.voiceURI && !isNeuralVoice(options.voiceURI)) {
+        voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getDefaultBrowserVoice();
+      } else {
+        voice = this.getDefaultBrowserVoice();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = options.rate ?? 0.85;
+      utterance.pitch = options.pitch ?? 1.0;
+      utterance.volume = options.volume ?? 1.0;
+      utterance.lang = voice?.lang || 'en-PH';
+      if (voice) utterance.voice = voice;
+
+      utterance.onend = () => {
+        this.currentUtterance = null;
+        resolve();
+      };
+
+      utterance.onerror = (e) => {
+        this.currentUtterance = null;
+        console.warn('Browser speech synthesis notice:', e);
+        resolve();
+      };
+
+      this.currentUtterance = utterance;
+      this.synth.speak(utterance);
+    });
+  }
+
+  /**
    * Plays text aloud using the Audio Pipeline:
    * 1. If Neural voice selected and online -> play via Neural Edge Audio
    * 2. If Neural fails, offline, or browser voice selected -> fallback to Web Speech API
@@ -217,94 +354,9 @@ class AudioEngine {
       onEnd?: () => void;
     } = {}
   ) {
-    this.stop();
-
-    const voiceURI = options.voiceURI || 'en-PH-JamesNeural';
-    const rate = options.rate ?? 0.85;
-
-    // Check if user selected an Edge Neural Voice
-    if (isNeuralVoice(voiceURI) && typeof navigator !== 'undefined' && navigator.onLine) {
-      this.playNeuralSpeech(text, voiceURI, rate, options.volume ?? 1.0, options.onEnd).catch((err) => {
-        console.warn('Neural TTS playback notice (falling back to device speech):', err);
-        this.fallbackWebSpeech(text, options);
-      });
-      return;
-    }
-
-    // Direct Browser Speech Synthesis Fallback
-    this.fallbackWebSpeech(text, options);
-  }
-
-  private async playNeuralSpeech(
-    text: string,
-    voiceId: string,
-    rate: number,
-    volume: number,
-    onEnd?: () => void
-  ) {
-    const audioUrl = await this.getNeuralAudioUrl(text, voiceId, rate);
-    const audio = new Audio(audioUrl);
-    audio.volume = Math.max(0, Math.min(1, volume));
-
-    this.currentAudioElement = audio;
-
-    audio.onended = () => {
-      this.currentAudioElement = null;
-      onEnd?.();
-    };
-
-    audio.onerror = (e) => {
-      this.currentAudioElement = null;
-      throw new Error(`Neural Audio error: ${e}`);
-    };
-
-    await audio.play();
-  }
-
-  private fallbackWebSpeech(
-    text: string,
-    options: {
-      rate?: number;
-      pitch?: number;
-      volume?: number;
-      voiceURI?: string | null;
-      onEnd?: () => void;
-    }
-  ) {
-    if (!this.synth) {
+    this.speakTextAsync(text, options).then(() => {
       options.onEnd?.();
-      return;
-    }
-
-    const voices = this.getVoices();
-    let voice: SpeechSynthesisVoice | null = null;
-
-    if (options.voiceURI && !isNeuralVoice(options.voiceURI)) {
-      voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getDefaultBrowserVoice();
-    } else {
-      voice = this.getDefaultBrowserVoice();
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = options.rate ?? 0.85;
-    utterance.pitch = options.pitch ?? 1.0;
-    utterance.volume = options.volume ?? 1.0;
-    utterance.lang = voice?.lang || 'en-PH';
-    if (voice) utterance.voice = voice;
-
-    utterance.onend = () => {
-      this.currentUtterance = null;
-      options.onEnd?.();
-    };
-
-    utterance.onerror = (e) => {
-      this.currentUtterance = null;
-      console.warn('Browser speech synthesis error:', e);
-      options.onEnd?.();
-    };
-
-    this.currentUtterance = utterance;
-    this.synth.speak(utterance);
+    });
   }
 
   /**
@@ -323,6 +375,7 @@ class AudioEngine {
     callbacks: AudioProctorCallbacks = {}
   ) {
     this.stop();
+    this.isUserStopped = false;
 
     const pauseDuration = options.pauseDurationSeconds ?? 2;
     const rate = options.rate ?? 0.85;
@@ -332,6 +385,7 @@ class AudioEngine {
     // Check if neural voice pipeline can be used
     if (isNeuralVoice(voiceURI) && typeof navigator !== 'undefined' && navigator.onLine) {
       this.pronounceNeuralCadence(word, voiceURI, rate, volume, pauseDuration, callbacks).catch((err) => {
+        if (this.isUserStopped) return;
         console.warn('Neural cadence error (falling back to device speech):', err);
         this.pronounceWebSpeechCadence(word, options, callbacks);
       });
@@ -352,6 +406,7 @@ class AudioEngine {
   ) {
     // Preload audio URL (instant subsequent replay)
     const audioUrl = await this.getNeuralAudioUrl(word, voiceId, rate);
+    if (this.isUserStopped) return;
 
     callbacks.onStartFirst?.();
 
@@ -362,10 +417,18 @@ class AudioEngine {
 
     firstAudio.onended = () => {
       this.currentAudioElement = null;
+      if (this.isUserStopped) return;
+
       let countdown = pauseDuration;
       callbacks.onPauseStart?.(countdown);
 
       this.pauseTimer = setInterval(() => {
+        if (this.isUserStopped) {
+          clearInterval(this.pauseTimer);
+          this.pauseTimer = null;
+          return;
+        }
+
         countdown--;
         if (countdown > 0) {
           callbacks.onPauseTick?.(countdown);
@@ -381,16 +444,20 @@ class AudioEngine {
 
           secondAudio.onended = () => {
             this.currentAudioElement = null;
-            callbacks.onComplete?.();
+            if (!this.isUserStopped) {
+              callbacks.onComplete?.();
+            }
           };
 
           secondAudio.onerror = (e) => {
             this.currentAudioElement = null;
+            if (this.isUserStopped) return;
             callbacks.onError?.(e);
             callbacks.onComplete?.();
           };
 
           secondAudio.play().catch((e) => {
+            if (this.isUserStopped) return;
             callbacks.onError?.(e);
             callbacks.onComplete?.();
           });
@@ -400,6 +467,7 @@ class AudioEngine {
 
     firstAudio.onerror = (e) => {
       this.currentAudioElement = null;
+      if (this.isUserStopped) return;
       callbacks.onError?.(e);
       callbacks.onComplete?.();
     };
