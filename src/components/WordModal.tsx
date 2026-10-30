@@ -16,8 +16,33 @@ import { WordRecord, WordDefinition } from '../types';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { useLicenseStore } from '../store/licenseStore';
 import { fetchWordDefinition } from '../services/dictionary';
-import { audioService } from '../services/audio';
+import { audioService, isNeuralVoice } from '../services/audio';
 import { UnlockProModal } from './UnlockProModal';
+
+export const CADENCE_CONFIG = {
+  slow: {
+    letterIntervalMs: 650,
+    letterRate: 0.9,
+    wordRate: 0.95,
+    finalPauseMs: 400,
+    transitionClass: 'duration-300',
+  },
+  normal: {
+    letterIntervalMs: 450,
+    letterRate: 1.0,
+    wordRate: 1.0,
+    finalPauseMs: 300,
+    transitionClass: 'duration-200',
+  },
+  fast: {
+    // 2x snappier pacing for competition drills
+    letterIntervalMs: 240,
+    letterRate: 1.25, // Crisp articulation without robotic formant distortion
+    wordRate: 1.05, // Keep whole word natural and full (avoids clipped/hoarse finish)
+    finalPauseMs: 250,
+    transitionClass: 'duration-100',
+  },
+};
 
 export interface WordModalProps {
   word?: string | null;
@@ -53,11 +78,47 @@ export const WordModal: React.FC<WordModalProps> = ({
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [isSpellingActive, setIsSpellingActive] = useState(false);
   const [speedMode, setSpeedMode] = useState<'slow' | 'normal' | 'fast'>('slow');
+  const isPlayingRef = useRef(false);
 
   // Cancel reference to cleanly abort timeouts/intervals on close or stop
   const cancelDrillRef = useRef<(() => void) | null>(null);
 
+  // Keep browser speech voices loaded and available
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      const onVoicesChanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+      };
+    }
+  }, []);
+
+  const getSelectedVoice = (): SpeechSynthesisVoice | null => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    const uri = settings.selectedVoiceURI;
+    if (uri && !isNeuralVoice(uri)) {
+      const match = voices.find((v) => v.voiceURI === uri || v.name === uri);
+      if (match) return match;
+    }
+
+    const phVoice = voices.find((v) => v.lang.startsWith('en-PH'));
+    if (phVoice) return phVoice;
+    const usVoice = voices.find((v) => v.lang.startsWith('en-US') && !v.name.includes('Bad'));
+    if (usVoice) return usVoice;
+    const enVoice = voices.find((v) => v.lang.startsWith('en'));
+    if (enVoice) return enVoice;
+    return voices[0] || null;
+  };
+
   const stopSpellingDrill = () => {
+    isPlayingRef.current = false;
     if (cancelDrillRef.current) {
       cancelDrillRef.current();
       cancelDrillRef.current = null;
@@ -140,11 +201,11 @@ export const WordModal: React.FC<WordModalProps> = ({
   };
 
   /**
-   * Interactive Automated "Spell It Out" Drill
-   * 1. Skip saying the full word at the start - jumps straight into spelling the letters.
-   * 2. Sequentially highlight each letter tile and await audio playback.
-   * 3. Once the final letter is spoken, wait a clean pause (approx. 600ms).
-   * 4. Pronounce the full word at the very end as the closing resolution.
+   * Interactive Synchronized "Spell It Out" Drill
+   * 1. Skips saying full word upfront - jumps straight into synchronized spelling.
+   * 2. Sequentially highlights active letter card and articulates letter.
+   * 3. Clears letter highlight and applies cadence pause before closing resolution.
+   * 4. Pronounces complete word at natural rate (smooth, unclipped, zero hoarseness).
    */
   const handleStartSpellingDrill = async () => {
     if (isSpellingActive) {
@@ -152,115 +213,159 @@ export const WordModal: React.FC<WordModalProps> = ({
       return;
     }
 
-    // Explicitly cancel any pending speech synthesis
+    stopSpellingDrill();
+    isPlayingRef.current = true;
+    setIsSpellingActive(true);
+    setHighlightedIndex(null);
+
+    const config = CADENCE_CONFIG[speedMode];
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     audioService.stop();
 
-    setIsSpellingActive(true);
-    setHighlightedIndex(null);
+    const selectedVoice = getSelectedVoice();
+    const lettersUpper = displayWord.toUpperCase().split('');
 
-    let isAborted = false;
-    let sleepTimer: any = null;
-    let sleepResolve: (() => void) | null = null;
+    try {
+      for (let i = 0; i < lettersUpper.length; i++) {
+        if (!isPlayingRef.current) break; // Allow instant cancellation via "Stop Spelling"
 
-    cancelDrillRef.current = () => {
-      isAborted = true;
-      if (sleepTimer) {
-        clearTimeout(sleepTimer);
-        sleepTimer = null;
-      }
-      if (sleepResolve) {
-        sleepResolve();
-        sleepResolve = null;
-      }
-      audioService.stop();
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
+        // 1. Immediately highlight the active letter card
+        setHighlightedIndex(i);
 
-    const cancellableDelay = (ms: number): Promise<void> => {
-      return new Promise((resolve) => {
-        if (isAborted) {
+        // 2. Pronounce the single letter cleanly with cadence lock
+        await new Promise<void>((resolve) => {
+          if (!isPlayingRef.current) {
+            resolve();
+            return;
+          }
+
+          let isResolved = false;
+          let speechFinished = false;
+          let intervalFinished = false;
+
+          const finish = () => {
+            if (isResolved) return;
+            if (!isPlayingRef.current) {
+              isResolved = true;
+              resolve();
+              return;
+            }
+            if (speechFinished && intervalFinished) {
+              isResolved = true;
+              resolve();
+            }
+          };
+
+          const letterUtterance = new SpeechSynthesisUtterance(lettersUpper[i]);
+          letterUtterance.rate = config.letterRate;
+          letterUtterance.pitch = 1.0;
+          if (selectedVoice) letterUtterance.voice = selectedVoice;
+
+          // Advance immediately on finish or fallback timeout
+          letterUtterance.onend = () => {
+            speechFinished = true;
+            finish();
+          };
+          letterUtterance.onerror = () => {
+            speechFinished = true;
+            finish();
+          };
+
+          try {
+            window.speechSynthesis.speak(letterUtterance);
+          } catch {
+            speechFinished = true;
+            finish();
+          }
+
+          // Enforce the interval floor so fast mode maintains cadence
+          const intervalTimer = setTimeout(() => {
+            intervalFinished = true;
+            finish();
+          }, config.letterIntervalMs);
+
+          // Watchdog timer in case speech synthesis stalls
+          const watchdogTimer = setTimeout(() => {
+            speechFinished = true;
+            finish();
+          }, config.letterIntervalMs + 120);
+
+          cancelDrillRef.current = () => {
+            clearTimeout(intervalTimer);
+            clearTimeout(watchdogTimer);
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+              window.speechSynthesis.cancel();
+            }
+            isResolved = true;
+            resolve();
+          };
+        });
+      }
+
+      if (!isPlayingRef.current) return;
+
+      // 3. Clear letter highlight and pause slightly before the final word
+      setHighlightedIndex(null);
+      await new Promise<void>((resolve) => {
+        const pauseTimer = setTimeout(resolve, config.finalPauseMs);
+        cancelDrillRef.current = () => {
+          clearTimeout(pauseTimer);
+          resolve();
+        };
+      });
+
+      if (!isPlayingRef.current) return;
+
+      // 4. Pronounce the complete word with natural pitch and volume (no hoarseness)
+      await new Promise<void>((resolve) => {
+        if (!isPlayingRef.current) {
           resolve();
           return;
         }
-        sleepResolve = resolve;
-        sleepTimer = setTimeout(() => {
-          sleepTimer = null;
-          sleepResolve = null;
+
+        const finalWordUtterance = new SpeechSynthesisUtterance(displayWord);
+        finalWordUtterance.rate = config.wordRate; // Natural baseline rate so it sounds smooth
+        finalWordUtterance.pitch = 1.0;
+        if (selectedVoice) finalWordUtterance.voice = selectedVoice;
+
+        finalWordUtterance.onend = () => {
+          setIsSpellingActive(false);
+          setHighlightedIndex(null);
+          isPlayingRef.current = false;
           resolve();
-        }, ms);
-      });
-    };
+        };
+        finalWordUtterance.onerror = () => {
+          setIsSpellingActive(false);
+          setHighlightedIndex(null);
+          isPlayingRef.current = false;
+          resolve();
+        };
 
-    // Ensure effective active voice is resolved and verified
-    const activeVoice = settings.selectedVoiceURI || 'en-PH-JamesNeural';
-    // Deliberate cadence for spellers:
-    // "slow" mode (default): rate 0.85, 300ms clean gap between letters
-    // "normal" mode: rate 1.0, 150ms gap, 600ms final pause
-    // "fast" mode (Pro Exclusive): 220ms per letter (rate 1.25, 70ms pause), 350ms final pause
-    let letterRate = 0.85;
-    let postLetterPause = 300;
-    let finalPause = 600;
-
-    if (speedMode === 'normal') {
-      letterRate = 1.0;
-      postLetterPause = 150;
-      finalPause = 600;
-    } else if (speedMode === 'fast') {
-      letterRate = 1.25;
-      postLetterPause = 70;
-      finalPause = 350;
-    }
-
-    try {
-      // Step 1: Jump straight into spelling letters sequentially (no initial whole word)
-      for (let i = 0; i < letters.length; i++) {
-        if (isAborted) break;
-
-        const letter = letters[i];
-        setHighlightedIndex(i);
-
-        // Await audio playback completion (audio load & play event) for 100% tile sync
-        await audioService.speakTextAsync(`${letter.toUpperCase()}.`, {
-          rate: letterRate,
-          pitch: settings.speechPitch,
-          volume: settings.speechVolume,
-          voiceURI: activeVoice,
-        });
-
-        if (isAborted) break;
-
-        // Clean pause between letter tiles without overlapping speech clips
-        if (i < letters.length - 1) {
-          await cancellableDelay(postLetterPause);
+        try {
+          window.speechSynthesis.speak(finalWordUtterance);
+        } catch {
+          setIsSpellingActive(false);
+          setHighlightedIndex(null);
+          isPlayingRef.current = false;
+          resolve();
         }
-      }
 
-      if (isAborted) return;
-
-      // Step 2: Clean pause (600ms for slow/normal, 350ms for fast) after final letter
-      setHighlightedIndex(null);
-      await cancellableDelay(finalPause);
-
-      if (isAborted) return;
-
-      // Step 3: Pronounce full word at the very end as closing resolution
-      await audioService.speakTextAsync(displayWord, {
-        rate: speedMode === 'fast' ? Math.min(1.15, settings.speechRate * 1.15) : settings.speechRate,
-        pitch: settings.speechPitch,
-        volume: settings.speechVolume,
-        voiceURI: activeVoice,
+        cancelDrillRef.current = () => {
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+          resolve();
+        };
       });
     } catch (err) {
       console.warn('Spelling drill ended or interrupted:', err);
     } finally {
-      if (!isAborted) {
+      if (isPlayingRef.current) {
         setIsSpellingActive(false);
         setHighlightedIndex(null);
+        isPlayingRef.current = false;
       }
     }
   };
@@ -343,11 +448,11 @@ export const WordModal: React.FC<WordModalProps> = ({
               return (
                 <div
                   key={idx}
-                  className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
+                  className={`w-11 h-13 sm:w-12 sm:h-14 flex items-center justify-center font-bold text-lg sm:text-xl rounded-2xl border transition-all transform ${
                     isCurrent
-                      ? 'bg-amber-500 text-white border-amber-500 scale-110 shadow-lg ring-4 ring-amber-300 dark:ring-amber-800 animate-pulse border-2'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-2xs hover:border-amber-400'
-                  }`}
+                      ? 'bg-amber-500 border-amber-400 text-white shadow-lg shadow-amber-500/30 scale-110 z-10'
+                      : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
+                  } ${CADENCE_CONFIG[speedMode].transitionClass}`}
                 >
                   {char.toUpperCase()}
                 </div>
@@ -405,7 +510,7 @@ export const WordModal: React.FC<WordModalProps> = ({
                   onClick={() => {
                     if (!isProUnlocked) {
                       setUnlockReason(
-                        "Rapid 'Blitz' spelling drill (220ms/letter) is an exclusive Spellbean Pro training feature."
+                        "Rapid 'Blitz' spelling drill (240ms/letter) is an exclusive Spellbean Pro training feature."
                       );
                       setShowUnlockModal(true);
                       return;
