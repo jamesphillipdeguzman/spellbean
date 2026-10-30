@@ -17,6 +17,7 @@ import { useSpellingStore } from '../store/useSpellingStore';
 import { useLicenseStore } from '../store/licenseStore';
 import { fetchWordDefinition } from '../services/dictionary';
 import { audioService, isNeuralVoice } from '../services/audio';
+import { getLetterAudio, playFullWordNeuralAudio } from '../services/tts';
 import { UnlockProModal } from './UnlockProModal';
 
 export const CADENCE_CONFIG = {
@@ -80,6 +81,7 @@ export const WordModal: React.FC<WordModalProps> = ({
   const [isSpellingActive, setIsSpellingActive] = useState(false);
   const [speedMode, setSpeedMode] = useState<'slow' | 'normal' | 'fast'>('slow');
   const isPlayingRef = useRef(false);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Cancel reference to cleanly abort timeouts/intervals on close or stop
   const cancelDrillRef = useRef<(() => void) | null>(null);
@@ -154,6 +156,11 @@ export const WordModal: React.FC<WordModalProps> = ({
 
   const stopSpellingDrill = () => {
     isPlayingRef.current = false;
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current.currentTime = 0;
+      activeAudioRef.current = null;
+    }
     if (cancelDrillRef.current) {
       cancelDrillRef.current();
       cancelDrillRef.current = null;
@@ -165,6 +172,7 @@ export const WordModal: React.FC<WordModalProps> = ({
     setIsSpellingActive(false);
     setHighlightedIndex(null);
   };
+  const stopSpelling = stopSpellingDrill;
 
   // Close modal on ESC key and cleanup on unmount
   useEffect(() => {
@@ -238,9 +246,9 @@ export const WordModal: React.FC<WordModalProps> = ({
   /**
    * Interactive Synchronized "Spell It Out" Drill
    * 1. Skips saying full word upfront - jumps straight into synchronized spelling.
-   * 2. Sequentially highlights active letter card and articulates letter.
+   * 2. Sequentially highlights active letter card and articulates letter via Pro Neural Audio.
    * 3. Clears letter highlight and applies cadence pause before closing resolution.
-   * 4. Pronounces complete word at natural rate (smooth, unclipped, zero hoarseness).
+   * 4. Pronounces complete word using authentic Neural Voice audio.
    */
   const handleStartSpellingDrill = async () => {
     if (isSpellingActive) {
@@ -253,153 +261,107 @@ export const WordModal: React.FC<WordModalProps> = ({
     setIsSpellingActive(true);
     setHighlightedIndex(null);
 
-    const config = CADENCE_CONFIG[speedMode];
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    audioService.stop();
-
+    // Active voice from store (e.g., 'en-PH-JamesNeural', 'en-PH-RosaNeural', or 'en-US-JennyNeural')
+    const voice = selectedProctorVoice || 'en-PH-JamesNeural';
+    const letters = displayWord.toUpperCase().split('');
+    const speedDelay = speedMode === 'fast' ? 380 : speedMode === 'slow' ? 650 : 500;
     const activeVoice = resolveActiveVoice();
-    const lettersUpper = displayWord.toUpperCase().split('');
 
     try {
-      for (let i = 0; i < lettersUpper.length; i++) {
+      for (let i = 0; i < letters.length; i++) {
         if (!isPlayingRef.current) break; // Allow instant cancellation via "Stop Spelling"
 
-        // 1. Immediately highlight the active letter card
         setHighlightedIndex(i);
 
-        // 2. Wait for letterUtterance.onend before incrementing index so cards never jump ahead of audio
+        // Play the neural voice letter audio
         await new Promise<void>((resolve) => {
-          if (!isPlayingRef.current) {
+          let isDone = false;
+          let timer: any = null;
+
+          const done = () => {
+            if (isDone) return;
+            isDone = true;
+            if (timer) clearTimeout(timer);
             resolve();
-            return;
-          }
-
-          let isResolved = false;
-          const startTime = Date.now();
-
-          const onUtteranceEnd = () => {
-            if (isResolved) return;
-            if (!isPlayingRef.current) {
-              isResolved = true;
-              resolve();
-              return;
-            }
-
-            // Ensure letter card stays highlighted for at least letterIntervalMs
-            const elapsed = Date.now() - startTime;
-            const remaining = Math.max(0, config.letterIntervalMs - elapsed);
-
-            if (remaining > 0) {
-              const timer = setTimeout(() => {
-                isResolved = true;
-                resolve();
-              }, remaining);
-
-              cancelDrillRef.current = () => {
-                clearTimeout(timer);
-                isResolved = true;
-                resolve();
-              };
-            } else {
-              isResolved = true;
-              resolve();
-            }
           };
-
-          const letterUtterance = new SpeechSynthesisUtterance(lettersUpper[i]);
-          if (activeVoice) {
-            letterUtterance.voice = activeVoice;
-            letterUtterance.lang = activeVoice.lang;
-          }
-          letterUtterance.rate = config.letterRate;
-          letterUtterance.pitch = 1.0;
-
-          // Advance ONLY when utterance actually finishes
-          letterUtterance.onend = onUtteranceEnd;
-          letterUtterance.onerror = onUtteranceEnd;
 
           try {
-            window.speechSynthesis.speak(letterUtterance);
+            const audio = getLetterAudio(letters[i], voice);
+            activeAudioRef.current = audio;
+            audio.pause();
+            audio.currentTime = 0;
+
+            audio.onended = () => done();
+            audio.onerror = () => {
+              // Fallback to browser voice only if network/endpoint fails
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(letters[i]);
+                if (activeVoice) {
+                  u.voice = activeVoice;
+                  u.lang = activeVoice.lang;
+                }
+                u.onend = () => done();
+                u.onerror = () => done();
+                try {
+                  window.speechSynthesis.speak(u);
+                } catch {
+                  done();
+                }
+              } else {
+                done();
+              }
+            };
+
+            cancelDrillRef.current = () => {
+              if (activeAudioRef.current) {
+                activeAudioRef.current.pause();
+                activeAudioRef.current.currentTime = 0;
+              }
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+              }
+              done();
+            };
+
+            audio.play().catch(() => {
+              // Fallback to browser voice
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(letters[i]);
+                if (activeVoice) {
+                  u.voice = activeVoice;
+                  u.lang = activeVoice.lang;
+                }
+                u.onend = () => done();
+                u.onerror = () => done();
+                try {
+                  window.speechSynthesis.speak(u);
+                } catch {
+                  done();
+                }
+              } else {
+                done();
+              }
+            });
+
+            timer = setTimeout(done, speedDelay);
           } catch {
-            onUtteranceEnd();
+            done();
           }
-
-          // Safety watchdog only if speech engine stalls without firing onend
-          const watchdog = setTimeout(onUtteranceEnd, Math.max(2500, config.letterIntervalMs * 4));
-
-          const prevCancel = cancelDrillRef.current;
-          cancelDrillRef.current = () => {
-            clearTimeout(watchdog);
-            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-              window.speechSynthesis.cancel();
-            }
-            if (prevCancel) prevCancel();
-            isResolved = true;
-            resolve();
-          };
         });
       }
 
       if (!isPlayingRef.current) return;
 
-      // 3. Clear letter highlight and pause slightly before the final word
+      // Clear card highlights before whole word pronunciation
       setHighlightedIndex(null);
-      await new Promise<void>((resolve) => {
-        const pauseTimer = setTimeout(resolve, config.finalPauseMs);
-        cancelDrillRef.current = () => {
-          clearTimeout(pauseTimer);
-          resolve();
-        };
-      });
+      await new Promise((r) => setTimeout(r, 300));
 
-      if (!isPlayingRef.current) return;
-
-      // 4. Pronounce the complete word with natural pitch and volume (no hoarseness)
-      await new Promise<void>((resolve) => {
-        if (!isPlayingRef.current) {
-          resolve();
-          return;
-        }
-
-        const finalWordUtterance = new SpeechSynthesisUtterance(displayWord);
-        if (activeVoice) {
-          finalWordUtterance.voice = activeVoice;
-          finalWordUtterance.lang = activeVoice.lang;
-        }
-        finalWordUtterance.rate = config.wordRate; // Natural baseline rate so it sounds smooth
-        finalWordUtterance.pitch = 1.0;
-
-        finalWordUtterance.onend = () => {
-          setIsSpellingActive(false);
-          setHighlightedIndex(null);
-          isPlayingRef.current = false;
-          resolve();
-        };
-        finalWordUtterance.onerror = () => {
-          setIsSpellingActive(false);
-          setHighlightedIndex(null);
-          isPlayingRef.current = false;
-          resolve();
-        };
-
-        try {
-          window.speechSynthesis.speak(finalWordUtterance);
-        } catch {
-          setIsSpellingActive(false);
-          setHighlightedIndex(null);
-          isPlayingRef.current = false;
-          resolve();
-        }
-
-        cancelDrillRef.current = () => {
-          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-          }
-          resolve();
-        };
-      });
+      // Pronounce complete word using the main Neural audio player
+      if (isPlayingRef.current) {
+        await playFullWordNeuralAudio(displayWord, voice);
+        setIsSpellingActive(false);
+        isPlayingRef.current = false;
+      }
     } catch (err) {
       console.warn('Spelling drill ended or interrupted:', err);
     } finally {
@@ -410,6 +372,7 @@ export const WordModal: React.FC<WordModalProps> = ({
       }
     }
   };
+  const spellLetterByLetter = handleStartSpellingDrill;
 
   const handleToggleVault = () => {
     toggleMissedVaultWord(activeWordString);

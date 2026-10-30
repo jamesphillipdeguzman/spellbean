@@ -1,5 +1,6 @@
 import { audioService } from './audio';
 export * from './audio';
+export * from './tts';
 
 /**
  * Resolves active proctor speech synthesis voice from window.speechSynthesis.getVoices().
