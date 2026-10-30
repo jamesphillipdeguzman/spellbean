@@ -150,7 +150,7 @@ export const SettingsModal: React.FC = () => {
               type="date"
               value={settings.targetConventionDate}
               onChange={(e) => updateSettings({ targetConventionDate: e.target.value })}
-              className="w-full px-3 py-2 text-sm bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-warm-900 dark:text-warm-100 font-mono"
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono dark:[color-scheme:dark]"
             />
           </div>
           <p className="text-xs text-warm-500 dark:text-warm-400 leading-relaxed">
@@ -206,12 +206,12 @@ export const SettingsModal: React.FC = () => {
           <select
             value={settings.selectedVoiceURI || (isProUnlocked ? 'en-PH-JamesNeural' : '')}
             onChange={(e) => handleVoiceChange(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-800 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
+            className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
           >
             {/* Realistic Neural Voices Section */}
-            <optgroup label="⚡ Realistic Neural Voices (Online / AI) [PRO]">
+            <optgroup label="⚡ Realistic Neural Voices (Online / AI) [PRO]" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
               {NEURAL_VOICES.map((v) => (
-                <option key={v.id} value={v.id}>
+                <option key={v.id} value={v.id} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                   {v.lang.startsWith('en-PH') ? '🇵🇭' : '🇺🇸'} [PRO] {v.name}
                 </option>
               ))}
@@ -219,9 +219,9 @@ export const SettingsModal: React.FC = () => {
 
             {/* System / Offline Voices Section */}
             {groupedVoices.philippine.length > 0 && (
-              <optgroup label="🇵🇭 System Voices — Philippine English / Filipino (en-PH)">
+              <optgroup label="🇵🇭 System Voices — Philippine English / Filipino (en-PH)" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                 {groupedVoices.philippine.map((v) => (
-                  <option key={v.voiceURI} value={v.voiceURI}>
+                  <option key={v.voiceURI} value={v.voiceURI} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                     🇵🇭 {v.name} ({v.lang}) [Device Voice]
                   </option>
                 ))}
@@ -229,9 +229,9 @@ export const SettingsModal: React.FC = () => {
             )}
 
             {groupedVoices.us.length > 0 && (
-              <optgroup label="🇺🇸 System Voices — US English (en-US)">
+              <optgroup label="🇺🇸 System Voices — US English (en-US)" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                 {groupedVoices.us.map((v) => (
-                  <option key={v.voiceURI} value={v.voiceURI}>
+                  <option key={v.voiceURI} value={v.voiceURI} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                     🇺🇸 {v.name} ({v.lang})
                   </option>
                 ))}
@@ -239,9 +239,9 @@ export const SettingsModal: React.FC = () => {
             )}
 
             {groupedVoices.otherEnglish.length > 0 && (
-              <optgroup label="🌐 System Voices — Other English">
+              <optgroup label="🌐 System Voices — Other English" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                 {groupedVoices.otherEnglish.map((v) => (
-                  <option key={v.voiceURI} value={v.voiceURI}>
+                  <option key={v.voiceURI} value={v.voiceURI} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                     🌐 {v.name} ({v.lang})
                   </option>
                 ))}

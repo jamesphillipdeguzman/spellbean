@@ -170,13 +170,13 @@ export const WordBank: React.FC = () => {
         {/* Search Input & Sort Dropdown */}
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-warm-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by spelling or notes..."
-              className="w-full pl-10 pr-4 py-2 text-sm bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-warm-900 dark:text-warm-100"
+              className="w-full pl-10 pr-4 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -184,12 +184,12 @@ export const WordBank: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full sm:w-auto px-3 py-2 text-xs font-semibold bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-700 dark:text-warm-200 focus:outline-none"
+              className="w-full sm:w-auto px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
-              <option value="alpha-asc">Alphabetical (A → Z)</option>
-              <option value="alpha-desc">Alphabetical (Z → A)</option>
-              <option value="attempts-desc">Most Attempted</option>
-              <option value="accuracy-desc">Highest Accuracy</option>
+              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="alpha-asc">Alphabetical (A → Z)</option>
+              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="alpha-desc">Alphabetical (Z → A)</option>
+              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="attempts-desc">Most Attempted</option>
+              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="accuracy-desc">Highest Accuracy</option>
             </select>
           </div>
         </div>

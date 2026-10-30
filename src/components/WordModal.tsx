@@ -321,10 +321,10 @@ export const WordModal: React.FC<WordModalProps> = ({
               return (
                 <div
                   key={idx}
-                  className={`w-10 h-12 rounded-xl border-2 flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
+                  className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
                     isCurrent
-                      ? 'bg-amber-400 text-white scale-110 shadow-lg border-amber-500 ring-4 ring-amber-300 dark:ring-amber-800 animate-pulse'
-                      : 'bg-warm-50 dark:bg-warm-850 text-warm-900 dark:text-warm-100 border-warm-200 dark:border-warm-700 shadow-2xs hover:border-amber-400'
+                      ? 'bg-amber-500 text-white border-amber-500 scale-110 shadow-lg ring-4 ring-amber-300 dark:ring-amber-800 animate-pulse border-2'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-2xs hover:border-amber-400'
                   }`}
                 >
                   {char.toUpperCase()}
@@ -334,7 +334,7 @@ export const WordModal: React.FC<WordModalProps> = ({
           </div>
 
           {/* Spell It Out Drill Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-warm-50 dark:bg-warm-850 rounded-2xl border border-warm-200 dark:border-warm-800">
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
             <button
               onClick={handleStartSpellingDrill}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 ${
@@ -358,13 +358,13 @@ export const WordModal: React.FC<WordModalProps> = ({
 
             {/* Speed Toggle & Replay */}
             <div className="flex items-center gap-1 text-xs">
-              <div className="flex items-center p-1 bg-white dark:bg-warm-800 rounded-xl border border-warm-200 dark:border-warm-700">
+              <div className="flex items-center p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button
                   onClick={() => setSpeedMode('normal')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     speedMode === 'normal'
                       ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                      : 'text-warm-500 hover:text-warm-800'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   Normal
@@ -374,7 +374,7 @@ export const WordModal: React.FC<WordModalProps> = ({
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     speedMode === 'slow'
                       ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                      : 'text-warm-500 hover:text-warm-800'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   Slow
@@ -383,7 +383,7 @@ export const WordModal: React.FC<WordModalProps> = ({
 
               <button
                 onClick={playOfficialCadence}
-                className="p-2 rounded-xl bg-white dark:bg-warm-800 hover:bg-warm-100 text-warm-700 dark:text-warm-300 border border-warm-200 dark:border-warm-700"
+                className="p-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
                 title="Hear Official 2x Cadence"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -393,29 +393,29 @@ export const WordModal: React.FC<WordModalProps> = ({
         </div>
 
         {/* Study Details Card: Definition & Example */}
-        <div className="space-y-3 rounded-2xl bg-slate-50 dark:bg-warm-850 p-4 border border-slate-100 dark:border-warm-800 text-xs text-slate-700 dark:text-slate-300">
+        <div className="space-y-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 p-4 border border-slate-200 dark:border-slate-700 text-xs">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-1">
-              Definition
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-amber-400 font-bold block mb-1">
+              DEFINITION
             </span>
             {loading ? (
-              <div className="flex items-center gap-2 py-1 text-amber-600">
+              <div className="flex items-center gap-2 py-1 text-amber-600 dark:text-amber-400">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Loading definition...</span>
               </div>
             ) : (
-              <p className="text-sm font-serif leading-relaxed text-slate-800 dark:text-slate-100">
+              <p className="text-sm font-serif leading-relaxed text-slate-800 dark:text-slate-200">
                 {defText || 'Competition word in the official study bank.'}
               </p>
             )}
           </div>
 
           {exampleText && (
-            <div className="pt-2 border-t border-slate-200/60 dark:border-warm-750">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-1">
-                Sentence in Context
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <span className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-amber-400 font-bold block mb-1">
+                SENTENCE IN CONTEXT
               </span>
-              <p className="text-xs italic text-slate-600 dark:text-slate-300 leading-relaxed font-serif">
+              <p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed font-serif">
                 "{exampleText}"
               </p>
             </div>
