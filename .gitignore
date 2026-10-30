@@ -32,7 +32,8 @@ pids
 *.pid.lock
 
 # IDE & Editor Configurations
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
