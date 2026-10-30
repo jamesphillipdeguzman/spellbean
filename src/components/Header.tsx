@@ -89,13 +89,20 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Top Brand Bar */}
         <div className="py-3 flex items-center justify-between border-b border-warm-100 dark:border-warm-800/80">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 text-xl transform hover:rotate-6 transition-transform cursor-pointer">
+          <button
+            onClick={() => {
+              setShowUnlockModal(false);
+              setActiveTab('daily');
+            }}
+            className="flex items-center gap-3 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl transition cursor-pointer"
+            aria-label="Go to Daily Practice"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 text-xl transition-transform group-hover:scale-105 group-hover:rotate-6">
               🐝
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight text-warm-950 dark:text-warm-50 font-serif">
+                <span className="font-serif text-xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                   Spellbean
                 </span>
                 <span className="hidden md:inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40">
@@ -106,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
                 Independent Practice & Study Trainer for Student Convention Spellers
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Quick Metrics & Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
