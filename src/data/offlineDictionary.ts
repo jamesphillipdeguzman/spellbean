@@ -207,3 +207,4 @@ export function generateFallbackDefinition(word: string): WordDefinition {
     origin: 'Official SOT®P Spelling List (2026 Revision)',
   };
 }
+

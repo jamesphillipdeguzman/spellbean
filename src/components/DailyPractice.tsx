@@ -625,3 +625,4 @@ export const DailyPractice: React.FC = () => {
     </div>
   );
 };
+

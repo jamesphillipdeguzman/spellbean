@@ -145,3 +145,4 @@ export function getSpokenSentence(sentence: string, targetWord: string): string 
   const regex = new RegExp(`\\b${escaped}(s|es|ed|ing|ly)?\\b`, 'gi');
   return sentence.replace(regex, 'blank');
 }
+

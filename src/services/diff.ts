@@ -218,3 +218,4 @@ export function computeCharacterDiff(inputRaw: string, expectedRaw: string): Cha
     },
   };
 }
+

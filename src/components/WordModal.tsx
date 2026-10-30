@@ -222,3 +222,4 @@ export const WordModal: React.FC<WordModalProps> = ({ word, isOpen, onClose }) =
     </div>
   );
 };
+

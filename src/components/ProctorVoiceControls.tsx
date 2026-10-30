@@ -317,3 +317,4 @@ export const ProctorVoiceControls: React.FC<ProctorVoiceControlsProps> = ({
     </div>
   );
 };
+
