@@ -93,23 +93,27 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
               setShowUnlockModal(false);
               setActiveTab('daily');
             }}
-            className="flex items-center gap-3 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl transition cursor-pointer"
+            className="flex items-center gap-2.5 cursor-pointer group relative text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl transition"
             aria-label="Go to Daily Practice"
+            title="Independent Practice & Study Trainer for Student Convention Spellers"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 text-xl transition-transform group-hover:scale-105 group-hover:rotate-6">
+            {/* App Logo */}
+            <div className="shrink-0 w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 text-xl transition-transform group-hover:scale-105 group-hover:rotate-6">
               🐝
             </div>
+
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-serif text-xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                <span className="font-serif text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                   Spellbean
                 </span>
                 <span className="hidden md:inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40">
                   STUDY COMPANION • {isProUnlocked ? '1,604 WORDS' : '100 / 1,604 WORDS'}
                 </span>
               </div>
-              <p className="text-[11px] text-warm-500 dark:text-warm-400 font-medium">
-                Independent Practice & Study Trainer for Student Convention Spellers
+              {/* Hidden on mobile, visible on sm/md breakpoint */}
+              <p className="hidden sm:block text-[11px] leading-tight text-slate-500 dark:text-slate-400 max-w-[280px]">
+                Independent Practice &amp; Study Trainer for Student Convention Spellers
               </p>
             </div>
           </button>
@@ -118,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Streak */}
             <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-200 text-xs font-bold"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-200 text-xs font-bold shrink-0"
               title="Consecutive Days Practiced"
             >
               <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -138,32 +142,34 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
             {isProUnlocked ? (
               <button
                 onClick={() => setShowUnlockModal(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-2xs hover:scale-105 transition-transform"
-                title="Spellbean Pro Lifetime Active"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all shrink-0 font-bold"
+                aria-label="Spellbean Pro Lifetime Active"
+                title="Spellbean Pro Lifetime Access"
               >
-                <img 
-                  src="/lightbulb-flash-line.svg" 
-                  alt="Pro" 
-                  className="w-3.5 h-3.5 text-amber-500 inline-block align-middle brightness-125" 
-                />
-                <span>👑 PRO</span>
+                <span className="text-base sm:text-sm">👑</span>
+                <span className="hidden sm:inline font-bold text-xs tracking-wide uppercase">
+                  Pro
+                </span>
               </button>
             ) : (
               <button
                 onClick={() => setShowUnlockModal(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-xs hover:scale-105 transition-all"
-                title="Upgrade to Spellbean Pro"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all shrink-0"
+                aria-label="Spellbean Pro"
+                title="Spellbean Pro Lifetime Access"
               >
-                <span>⚡</span>
-                <span className="hidden sm:inline">Get</span>
-                <span>Pro</span>
+                <span className="text-base sm:text-sm">👑</span>
+                {/* Text hidden on mobile, shown on larger screens */}
+                <span className="hidden sm:inline font-bold text-xs tracking-wide uppercase">
+                  Pro
+                </span>
               </button>
             )}
 
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-xl text-warm-500 hover:text-warm-800 dark:hover:text-warm-100 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors"
+              className="p-2 rounded-xl text-warm-500 hover:text-warm-800 dark:hover:text-warm-100 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors shrink-0"
               title={settings.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {settings.darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -172,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
             {/* Shortcuts Help */}
             <button
               onClick={onOpenShortcuts}
-              className="p-2 rounded-xl text-warm-500 hover:text-warm-800 dark:hover:text-warm-100 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors"
+              className="p-2 rounded-xl text-warm-500 hover:text-warm-800 dark:hover:text-warm-100 hover:bg-warm-100 dark:hover:bg-warm-800 transition-colors shrink-0"
               title="Keyboard Shortcuts"
             >
               <HelpCircle className="w-4 h-4" />
