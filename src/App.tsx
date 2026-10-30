@@ -6,6 +6,7 @@ import { MissedVault } from './components/MissedVault';
 import { WordBank } from './components/WordBank';
 import { SettingsModal } from './components/SettingsModal';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
+import { Footer } from './components/Footer';
 import { useSpellingStore } from './store/useSpellingStore';
 import { useLicenseStore } from './store/licenseStore';
 
@@ -70,28 +71,8 @@ export const App: React.FC = () => {
         {activeTab === 'settings' && <SettingsModal />}
       </main>
 
-      {/* Footer */}
-      <footer className="w-full border-t border-slate-200 dark:border-warm-850 bg-white/60 dark:bg-warm-900/60 py-6 px-4 text-center text-xs text-slate-500 dark:text-warm-400">
-        <div className="max-w-4xl mx-auto space-y-2">
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <span>Spellbean • Convention Study Companion</span>
-            <span>•</span>
-            <span>1,604 Words Ingested</span>
-            <span>•</span>
-            <span>100% Offline Capable</span>
-            <span>•</span>
-            <button
-              onClick={() => setShowShortcuts(true)}
-              className="hover:text-slate-700 dark:hover:text-warm-200 underline underline-offset-2"
-            >
-              Shortcuts (?)
-            </button>
-          </div>
-          <p className="text-[11px] leading-relaxed text-slate-400 dark:text-warm-500">
-            <strong>Disclaimer:</strong> Spellbean is an independent, non-commercial study companion created to help students prepare for convention spelling events. It is not affiliated with, authorized, maintained, sponsored, or officially endorsed by School of Tomorrow® Philippines or Accelerated Christian Education, Inc.
-          </p>
-        </div>
-      </footer>
+      {/* Branded Footer Component */}
+      <Footer onOpenShortcuts={() => setShowShortcuts(true)} />
 
       {/* Shortcuts Modal */}
       <KeyboardShortcutsHelp
