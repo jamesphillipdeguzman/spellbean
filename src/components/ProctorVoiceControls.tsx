@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Volume2, BookOpen, Tag, MessageSquare, Globe, Loader2, Sparkles, StopCircle } from 'lucide-react';
-import { audioService } from '../services/audio';
+import { audioService, isNeuralVoice } from '../services/audio';
 import { fetchWordDefinition, maskWordInSentence, getSpokenSentence } from '../services/dictionary';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { WordDefinition } from '../types';
@@ -216,6 +216,28 @@ export const ProctorVoiceControls: React.FC<ProctorVoiceControlsProps> = ({
           >
             <StopCircle className="w-5 h-5" />
           </button>
+        )}
+      </div>
+
+      {/* Voice Badge Indicator */}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-warm-500 dark:text-warm-400">
+        {isNeuralVoice(settings.selectedVoiceURI) ? (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 font-semibold">
+            <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
+            <span>
+              🇵🇭 Neural Proctor Active (
+              {settings.selectedVoiceURI === 'en-PH-RosaNeural'
+                ? 'Rosa'
+                : settings.selectedVoiceURI === 'en-US-JennyNeural'
+                ? 'Jenny'
+                : 'James'}
+              )
+            </span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400 font-medium text-[10px]">
+            <span>Device Voice Active</span>
+          </span>
         )}
       </div>
 

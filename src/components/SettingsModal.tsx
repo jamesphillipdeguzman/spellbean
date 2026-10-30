@@ -14,9 +14,10 @@ import {
   Sun,
   ShieldAlert,
   PlusCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
-import { audioService } from '../services/audio';
+import { audioService, NEURAL_VOICES, isNeuralVoice } from '../services/audio';
 import { ImportWordsModal } from './ImportWordsModal';
 
 export const SettingsModal: React.FC = () => {
@@ -155,38 +156,47 @@ export const SettingsModal: React.FC = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-semibold text-warm-600 dark:text-warm-300 block">
-              Proctor Voice (en-PH / en-US):
+              Proctor Voice:
             </label>
-            {groupedVoices.philippine.length > 0 && (
-              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 px-2 py-0.5 rounded-full border border-amber-300/60 flex items-center gap-1">
-                <span>🇵🇭</span> Local Proctor Detected
+            {isNeuralVoice(settings.selectedVoiceURI || 'en-PH-JamesNeural') ? (
+              <span className="text-[10px] font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300/80 dark:border-amber-700 flex items-center gap-1 shadow-2xs">
+                <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
+                <span>Studio Neural (Edge AI)</span>
+              </span>
+            ) : (
+              <span className="text-[10px] font-semibold text-warm-600 dark:text-warm-300 bg-warm-100 dark:bg-warm-800 px-2 py-0.5 rounded-full border border-warm-200 dark:border-warm-700 flex items-center gap-1">
+                <span>Device Offline</span>
               </span>
             )}
           </div>
 
           <select
-            value={settings.selectedVoiceURI || ''}
-            onChange={(e) => updateSettings({ selectedVoiceURI: e.target.value || null })}
+            value={settings.selectedVoiceURI || 'en-PH-JamesNeural'}
+            onChange={(e) => updateSettings({ selectedVoiceURI: e.target.value })}
             className="w-full px-3 py-2 text-xs bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-800 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
           >
-            <option value="">
-              {groupedVoices.philippine.length > 0
-                ? `Default (🇵🇭 ${groupedVoices.philippine[0].name} — Local Proctor)`
-                : 'Default (High-Clarity English Voice)'}
-            </option>
+            {/* Realistic Neural Voices Section */}
+            <optgroup label="⚡ Realistic Neural Voices (Online / AI)">
+              {NEURAL_VOICES.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.lang.startsWith('en-PH') ? '🇵🇭' : '🇺🇸'} {v.name}
+                </option>
+              ))}
+            </optgroup>
 
+            {/* System / Offline Voices Section */}
             {groupedVoices.philippine.length > 0 && (
-              <optgroup label="🇵🇭 Philippine English / Filipino (en-PH)">
+              <optgroup label="🇵🇭 System Voices — Philippine English / Filipino (en-PH)">
                 {groupedVoices.philippine.map((v) => (
                   <option key={v.voiceURI} value={v.voiceURI}>
-                    🇵🇭 {v.name} ({v.lang}) [Local Proctor]
+                    🇵🇭 {v.name} ({v.lang}) [Device Voice]
                   </option>
                 ))}
               </optgroup>
             )}
 
             {groupedVoices.us.length > 0 && (
-              <optgroup label="🇺🇸 US English (en-US)">
+              <optgroup label="🇺🇸 System Voices — US English (en-US)">
                 {groupedVoices.us.map((v) => (
                   <option key={v.voiceURI} value={v.voiceURI}>
                     🇺🇸 {v.name} ({v.lang})
@@ -196,7 +206,7 @@ export const SettingsModal: React.FC = () => {
             )}
 
             {groupedVoices.otherEnglish.length > 0 && (
-              <optgroup label="🌐 Other English Voices">
+              <optgroup label="🌐 System Voices — Other English">
                 {groupedVoices.otherEnglish.map((v) => (
                   <option key={v.voiceURI} value={v.voiceURI}>
                     🌐 {v.name} ({v.lang})

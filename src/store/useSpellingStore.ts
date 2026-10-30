@@ -84,7 +84,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   speechRate: 0.85, // Official cadence rate
   speechPitch: 1.0,
   speechVolume: 1.0,
-  selectedVoiceURI: null,
+  selectedVoiceURI: 'en-PH-JamesNeural', // Realistic Neural Philippine English (Default local proctor)
   targetConventionDate: '2027-02-01',
   dailyGoal: 30,
   soundEffects: true,
