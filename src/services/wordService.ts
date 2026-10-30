@@ -24,3 +24,4 @@ export function isWordInActiveSet(word: string, isPro: boolean): boolean {
   const activeWords = getActiveWords(isPro).map((w) => w.toLowerCase());
   return activeWords.includes(word.toLowerCase());
 }
+
