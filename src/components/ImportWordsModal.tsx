@@ -76,7 +76,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
       setPromoCodeInput('');
       try {
         confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-      } catch (e) {}
+      } catch (e) { }
     }
   };
 
@@ -85,7 +85,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
     setPromoFeedback(res);
     try {
       confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Convert raw list of words into review items with duplication detection
@@ -195,7 +195,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
         origin: { y: 0.6 },
         colors: ['#F59E0B', '#10B981', '#3B82F6'],
       });
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleResetModal = () => {
@@ -294,11 +294,10 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
               <div className="flex items-center gap-2 border-b border-warm-200 dark:border-warm-800 pb-3">
                 <button
                   onClick={() => setActiveTab('text_csv')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'text_csv'
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'text_csv'
                       ? 'bg-amber-500 text-white shadow-sm'
                       : 'text-warm-600 dark:text-warm-300 hover:bg-warm-100 dark:hover:bg-warm-800'
-                  }`}
+                    }`}
                 >
                   <FileText className="w-4 h-4" />
                   <span>Raw Text / CSV (Free)</span>
@@ -306,11 +305,10 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
 
                 <button
                   onClick={() => setActiveTab('excel')}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'excel'
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'excel'
                       ? 'bg-amber-500 text-white shadow-sm'
                       : 'text-warm-600 dark:text-warm-300 hover:bg-warm-100 dark:hover:bg-warm-800'
-                  }`}
+                    }`}
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                   <span>Excel (.xlsx)</span>
@@ -323,11 +321,10 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
 
                 <button
                   onClick={() => setActiveTab('pdf')}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'pdf'
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'pdf'
                       ? 'bg-amber-500 text-white shadow-sm'
                       : 'text-warm-600 dark:text-warm-300 hover:bg-warm-100 dark:hover:bg-warm-800'
-                  }`}
+                    }`}
                 >
                   <FileCheck2 className="w-4 h-4" />
                   <span>PDF Document</span>
@@ -474,7 +471,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                           type="text"
                           value={promoCodeInput}
                           onChange={(e) => setPromoCodeInput(e.target.value)}
-                          placeholder="Enter promo code (e.g. SPELLCHAMP2027)"
+                          placeholder="Enter promo code"
                           className="flex-1 px-3 py-2 text-xs bg-white dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                         />
                         <button
@@ -486,9 +483,8 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                       </form>
                       {promoFeedback && (
                         <p
-                          className={`text-xs font-semibold ${
-                            promoFeedback.success ? 'text-emerald-600' : 'text-rose-600'
-                          }`}
+                          className={`text-xs font-semibold ${promoFeedback.success ? 'text-emerald-600' : 'text-rose-600'
+                            }`}
                         >
                           {promoFeedback.message}
                         </p>
@@ -573,7 +569,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                           type="text"
                           value={promoCodeInput}
                           onChange={(e) => setPromoCodeInput(e.target.value)}
-                          placeholder="Enter promo code (e.g. SPELLCHAMP2027)"
+                          placeholder="Enter promo code"
                           className="flex-1 px-3 py-2 text-xs bg-white dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                         />
                         <button
@@ -585,9 +581,8 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                       </form>
                       {promoFeedback && (
                         <p
-                          className={`text-xs font-semibold ${
-                            promoFeedback.success ? 'text-emerald-600' : 'text-rose-600'
-                          }`}
+                          className={`text-xs font-semibold ${promoFeedback.success ? 'text-emerald-600' : 'text-rose-600'
+                            }`}
                         >
                           {promoFeedback.message}
                         </p>
@@ -681,7 +676,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                       <input
                         type="checkbox"
                         checked={item.selected}
-                        onChange={() => {}} // Handled by parent click
+                        onChange={() => { }} // Handled by parent click
                         className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 cursor-pointer"
                       />
                       <span className="font-mono text-sm font-semibold text-warm-900 dark:text-warm-100">
@@ -769,3 +764,4 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
     </div>
   );
 };
+

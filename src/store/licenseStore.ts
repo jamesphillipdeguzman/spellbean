@@ -56,7 +56,7 @@ export const useLicenseStore = create<LicenseState>()(
 
         return {
           success: false,
-          message: 'Invalid promo or license code. Try code "SPELLCHAMP2027".',
+          message: 'Invalid promo or license code.',
         };
       },
 
@@ -73,3 +73,4 @@ export const useLicenseStore = create<LicenseState>()(
     }
   )
 );
+

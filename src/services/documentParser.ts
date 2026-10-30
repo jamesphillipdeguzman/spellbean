@@ -140,3 +140,4 @@ export async function parsePdfFile(file: File, onProgress?: (page: number, total
 
   return Array.from(wordsSet);
 }
+

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@andresaya/edge-tts": "^1.9.1",
     "canvas-confetti": "^1.9.3",
     "lucide-react": "^0.454.0",
     "papaparse": "^5.7.0",
