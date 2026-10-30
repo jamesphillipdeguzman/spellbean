@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackVisit } from '../services/analytics';
 
 interface FooterProps {
   onOpenShortcuts?: () => void;
@@ -11,22 +12,15 @@ export const Footer: React.FC<FooterProps> = ({ onOpenShortcuts }) => {
     let isMounted = true;
     const controller = new AbortController();
 
-    async function recordVisit() {
-      try {
-        const response = await fetch('https://api.counterapi.dev/v1/spellbean/visits/up', {
-          signal: controller.signal,
-        });
-        if (!response.ok) return;
-        const data = await response.json();
-        if (isMounted && typeof data?.count === 'number') {
-          setVisitsCount(data.count);
+    trackVisit(controller.signal)
+      .then((count) => {
+        if (isMounted && typeof count === 'number') {
+          setVisitsCount(count);
         }
-      } catch (err) {
-        // Gracefully fail silently if offline or blocked by adblockers/network
-      }
-    }
-
-    recordVisit();
+      })
+      .catch(() => {
+        // Silently fail if blocked or aborted
+      });
 
     return () => {
       isMounted = false;
