@@ -25,22 +25,22 @@ export const CADENCE_CONFIG = {
     letterRate: 0.9,
     wordRate: 0.95,
     finalPauseMs: 400,
-    transitionClass: 'duration-300',
+    transitionDuration: 'duration-300',
   },
   normal: {
-    letterIntervalMs: 450,
+    letterIntervalMs: 500,
     letterRate: 1.0,
     wordRate: 1.0,
-    finalPauseMs: 300,
-    transitionClass: 'duration-200',
+    finalPauseMs: 350,
+    transitionDuration: 'duration-200',
   },
   fast: {
-    // 2x snappier pacing for competition drills
-    letterIntervalMs: 240,
-    letterRate: 1.25, // Crisp articulation without robotic formant distortion
-    wordRate: 1.05, // Keep whole word natural and full (avoids clipped/hoarse finish)
-    finalPauseMs: 250,
-    transitionClass: 'duration-100',
+    // Halved speed from previous (increased from 220ms to 400ms) for clean articulation
+    letterIntervalMs: 400,
+    letterRate: 1.15,
+    wordRate: 1.0,
+    finalPauseMs: 300,
+    transitionDuration: 'duration-150',
   },
 };
 
@@ -102,19 +102,29 @@ export const WordModal: React.FC<WordModalProps> = ({
     const voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) return null;
 
-    const uri = settings.selectedVoiceURI;
-    if (uri && !isNeuralVoice(uri)) {
+    const uri = settings.selectedVoiceURI || 'en-PH-JamesNeural';
+    if (!isNeuralVoice(uri)) {
       const match = voices.find((v) => v.voiceURI === uri || v.name === uri);
       if (match) return match;
     }
 
-    const phVoice = voices.find((v) => v.lang.startsWith('en-PH'));
-    if (phVoice) return phVoice;
-    const usVoice = voices.find((v) => v.lang.startsWith('en-US') && !v.name.includes('Bad'));
-    if (usVoice) return usVoice;
-    const enVoice = voices.find((v) => v.lang.startsWith('en'));
-    if (enVoice) return enVoice;
-    return voices[0] || null;
+    // Match browser fallback voice based on selected neural voice
+    if (uri.includes('PH') || uri.includes('Rosa') || uri.includes('James')) {
+      return (
+        voices.find((v) => v.lang.startsWith('en-PH') || v.lang.startsWith('fil') || v.lang.startsWith('tl')) ||
+        voices.find((v) => v.lang.startsWith('en-US')) ||
+        voices.find((v) => v.lang.startsWith('en')) ||
+        voices[0] ||
+        null
+      );
+    }
+
+    return (
+      voices.find((v) => v.name.includes('Jenny') || v.lang.startsWith('en-US')) ||
+      voices.find((v) => v.lang.startsWith('en')) ||
+      voices[0] ||
+      null
+    );
   };
 
   const stopSpellingDrill = () => {
@@ -234,7 +244,7 @@ export const WordModal: React.FC<WordModalProps> = ({
         // 1. Immediately highlight the active letter card
         setHighlightedIndex(i);
 
-        // 2. Pronounce the single letter cleanly with cadence lock
+        // 2. Wait for letterUtterance.onend before incrementing index so cards never jump ahead of audio
         await new Promise<void>((resolve) => {
           if (!isPlayingRef.current) {
             resolve();
@@ -242,17 +252,32 @@ export const WordModal: React.FC<WordModalProps> = ({
           }
 
           let isResolved = false;
-          let speechFinished = false;
-          let intervalFinished = false;
+          const startTime = Date.now();
 
-          const finish = () => {
+          const onUtteranceEnd = () => {
             if (isResolved) return;
             if (!isPlayingRef.current) {
               isResolved = true;
               resolve();
               return;
             }
-            if (speechFinished && intervalFinished) {
+
+            // Ensure letter card stays highlighted for at least letterIntervalMs
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, config.letterIntervalMs - elapsed);
+
+            if (remaining > 0) {
+              const timer = setTimeout(() => {
+                isResolved = true;
+                resolve();
+              }, remaining);
+
+              cancelDrillRef.current = () => {
+                clearTimeout(timer);
+                isResolved = true;
+                resolve();
+              };
+            } else {
               isResolved = true;
               resolve();
             }
@@ -263,41 +288,26 @@ export const WordModal: React.FC<WordModalProps> = ({
           letterUtterance.pitch = 1.0;
           if (selectedVoice) letterUtterance.voice = selectedVoice;
 
-          // Advance immediately on finish or fallback timeout
-          letterUtterance.onend = () => {
-            speechFinished = true;
-            finish();
-          };
-          letterUtterance.onerror = () => {
-            speechFinished = true;
-            finish();
-          };
+          // Advance ONLY when utterance actually finishes
+          letterUtterance.onend = onUtteranceEnd;
+          letterUtterance.onerror = onUtteranceEnd;
 
           try {
             window.speechSynthesis.speak(letterUtterance);
           } catch {
-            speechFinished = true;
-            finish();
+            onUtteranceEnd();
           }
 
-          // Enforce the interval floor so fast mode maintains cadence
-          const intervalTimer = setTimeout(() => {
-            intervalFinished = true;
-            finish();
-          }, config.letterIntervalMs);
+          // Safety watchdog only if speech engine stalls without firing onend
+          const watchdog = setTimeout(onUtteranceEnd, Math.max(2500, config.letterIntervalMs * 4));
 
-          // Watchdog timer in case speech synthesis stalls
-          const watchdogTimer = setTimeout(() => {
-            speechFinished = true;
-            finish();
-          }, config.letterIntervalMs + 120);
-
+          const prevCancel = cancelDrillRef.current;
           cancelDrillRef.current = () => {
-            clearTimeout(intervalTimer);
-            clearTimeout(watchdogTimer);
+            clearTimeout(watchdog);
             if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
               window.speechSynthesis.cancel();
             }
+            if (prevCancel) prevCancel();
             isResolved = true;
             resolve();
           };
@@ -452,7 +462,7 @@ export const WordModal: React.FC<WordModalProps> = ({
                     isCurrent
                       ? 'bg-amber-500 border-amber-400 text-white shadow-lg shadow-amber-500/30 scale-110 z-10'
                       : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
-                  } ${CADENCE_CONFIG[speedMode].transitionClass}`}
+                  } ${CADENCE_CONFIG[speedMode].transitionDuration}`}
                 >
                   {char.toUpperCase()}
                 </div>
@@ -510,7 +520,7 @@ export const WordModal: React.FC<WordModalProps> = ({
                   onClick={() => {
                     if (!isProUnlocked) {
                       setUnlockReason(
-                        "Rapid 'Blitz' spelling drill (240ms/letter) is an exclusive Spellbean Pro training feature."
+                        "Rapid 'Blitz' spelling drill (400ms/letter) is an exclusive Spellbean Pro training feature."
                       );
                       setShowUnlockModal(true);
                       return;

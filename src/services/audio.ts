@@ -157,6 +157,29 @@ class AudioEngine {
     return all[0] || null;
   }
 
+  public getFallbackVoice(targetVoiceName?: string | null): SpeechSynthesisVoice | null {
+    const voices = this.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    const target = (targetVoiceName || '').toUpperCase();
+    if (target.includes('PH') || target.includes('ROSA') || target.includes('JAMES')) {
+      return (
+        voices.find((v) => v.lang.startsWith('en-PH') || v.lang.startsWith('fil') || v.lang.startsWith('tl')) ||
+        voices.find((v) => v.lang.startsWith('en-US')) ||
+        voices.find((v) => v.lang.startsWith('en')) ||
+        voices[0] ||
+        null
+      );
+    }
+
+    return (
+      voices.find((v) => v.name.includes('Jenny') || v.lang.startsWith('en-US')) ||
+      voices.find((v) => v.lang.startsWith('en')) ||
+      voices[0] ||
+      null
+    );
+  }
+
   public stop() {
     this.isUserStopped = true;
     if (this.pauseTimer) {
@@ -314,9 +337,9 @@ class AudioEngine {
       let voice: SpeechSynthesisVoice | null = null;
 
       if (options.voiceURI && !isNeuralVoice(options.voiceURI)) {
-        voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getDefaultBrowserVoice();
+        voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getFallbackVoice(options.voiceURI);
       } else {
-        voice = this.getDefaultBrowserVoice();
+        voice = this.getFallbackVoice(options.voiceURI);
       }
 
       const utterance = new SpeechSynthesisUtterance(text);
@@ -472,11 +495,23 @@ class AudioEngine {
     firstAudio.onerror = (e) => {
       this.currentAudioElement = null;
       if (this.isUserStopped) return;
-      callbacks.onError?.(e);
-      callbacks.onComplete?.();
+      console.warn('Neural audio playback error, falling back to Web Speech:', e);
+      this.pronounceWebSpeechCadence(
+        word,
+        { rate, volume, voiceURI: voiceId, pauseDurationSeconds: pauseDuration },
+        callbacks
+      );
     };
 
-    await firstAudio.play();
+    firstAudio.play().catch((e) => {
+      if (this.isUserStopped) return;
+      console.warn('Neural audio play() error, falling back to Web Speech:', e);
+      this.pronounceWebSpeechCadence(
+        word,
+        { rate, volume, voiceURI: voiceId, pauseDurationSeconds: pauseDuration },
+        callbacks
+      );
+    });
   }
 
   private pronounceWebSpeechCadence(
@@ -503,9 +538,9 @@ class AudioEngine {
     const voices = this.getVoices();
     let voice: SpeechSynthesisVoice | null = null;
     if (options.voiceURI && !isNeuralVoice(options.voiceURI)) {
-      voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getDefaultBrowserVoice();
+      voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getFallbackVoice(options.voiceURI);
     } else {
-      voice = this.getDefaultBrowserVoice();
+      voice = this.getFallbackVoice(options.voiceURI);
     }
 
     const voiceLang = voice?.lang || 'en-PH';
