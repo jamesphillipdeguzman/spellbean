@@ -14,13 +14,13 @@ import {
   Sun,
   ShieldAlert,
   PlusCircle,
-  Sparkles,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { useLicenseStore } from '../store/licenseStore';
 import { audioService, NEURAL_VOICES, isNeuralVoice } from '../services/audio';
 import { ImportWordsModal } from './ImportWordsModal';
 import { UnlockProModal } from './UnlockProModal';
+import { BrainAiFlashLine } from './icons/BrainAiFlashLine';
 
 export const SettingsModal: React.FC = () => {
   const store = useSpellingStore();
@@ -183,7 +183,7 @@ export const SettingsModal: React.FC = () => {
             </label>
             {isNeuralVoice(settings.selectedVoiceURI || 'en-PH-JamesNeural') && isProUnlocked ? (
               <span className="text-[10px] font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300/80 dark:border-amber-700 flex items-center gap-1 shadow-2xs">
-                <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
+                <BrainAiFlashLine className="w-3.5 h-3.5 text-amber-500" />
                 <span>Studio Neural (Pro Unlocked)</span>
               </span>
             ) : isNeuralVoice(settings.selectedVoiceURI || 'en-PH-JamesNeural') && !isProUnlocked ? (

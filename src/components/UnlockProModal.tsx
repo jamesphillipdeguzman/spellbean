@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Sparkles,
   X,
   CheckCircle2,
   Key,
@@ -12,6 +11,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { useLicenseStore } from '../store/licenseStore';
+import { BrainAiFlashLine } from './icons/BrainAiFlashLine';
 
 export interface UnlockProModalProps {
   isOpen: boolean;
@@ -115,7 +115,7 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
         <div className="space-y-3 py-1">
           <div className="bg-slate-900/80 dark:bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-start gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 fill-current" />
+              <BrainAiFlashLine className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <span className="text-base font-bold text-slate-100 dark:text-white block">

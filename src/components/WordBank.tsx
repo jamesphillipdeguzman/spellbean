@@ -5,7 +5,6 @@ import {
   Star,
   CheckCircle2,
   Clock,
-  Sparkles,
   Volume2,
   BookOpen,
   ArrowUpDown,

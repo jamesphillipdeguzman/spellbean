@@ -7,7 +7,6 @@ import {
   FileSpreadsheet,
   FileCheck2,
   Lock,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -253,8 +252,12 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                   Custom Word Ingestion Hub
                 </h3>
                 {isProUnlocked ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
-                    <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                    <img 
+                      src="/lightbulb-flash-line.svg" 
+                      alt="Pro" 
+                      className="w-3.5 h-3.5 text-amber-500 inline-block align-middle brightness-125" 
+                    />
                     Pro Unlocked
                   </span>
                 ) : (
@@ -462,7 +465,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                           rel="noopener noreferrer"
                           className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
                         >
-                          <Sparkles className="w-4 h-4 fill-current" />
+                          <span>⚡</span>
                           <span>Unlock Lifetime Access — ₱399 (GCash / Maya / Card)</span>
                         </a>
                       </div>
@@ -562,7 +565,7 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                           rel="noopener noreferrer"
                           className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
                         >
-                          <Sparkles className="w-4 h-4 fill-current" />
+                          <span>⚡</span>
                           <span>Unlock Lifetime Access — ₱399 (GCash / Maya / Card)</span>
                         </a>
                       </div>

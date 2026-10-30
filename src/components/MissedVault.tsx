@@ -7,7 +7,6 @@ import {
   Volume2,
   CheckCircle,
   Clock,
-  Sparkles,
   ArrowUpDown,
   ChevronDown,
   BookOpen,

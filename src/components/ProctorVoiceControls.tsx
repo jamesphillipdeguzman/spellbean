@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, BookOpen, Tag, MessageSquare, Globe, Loader2, Sparkles, StopCircle } from 'lucide-react';
+import { Volume2, BookOpen, Tag, MessageSquare, Globe, Loader2, StopCircle } from 'lucide-react';
 import { audioService, isNeuralVoice } from '../services/audio';
 import { fetchWordDefinition, maskWordInSentence, getSpokenSentence } from '../services/dictionary';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { WordDefinition } from '../types';
+import { BrainAiFlashLine } from './icons/BrainAiFlashLine';
 
 interface ProctorVoiceControlsProps {
   word: string;
@@ -222,8 +223,8 @@ export const ProctorVoiceControls: React.FC<ProctorVoiceControlsProps> = ({
       {/* Voice Badge Indicator */}
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-warm-500 dark:text-warm-400">
         {isNeuralVoice(settings.selectedVoiceURI) ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 font-semibold">
-            <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 font-semibold">
+            <BrainAiFlashLine className="w-3.5 h-3.5 text-amber-500" />
             <span>
               🇵🇭 Neural Proctor Active (
               {settings.selectedVoiceURI === 'en-PH-RosaNeural'
@@ -245,7 +246,11 @@ export const ProctorVoiceControls: React.FC<ProctorVoiceControlsProps> = ({
       <div className="bg-warm-50 dark:bg-warm-900/60 p-3 rounded-2xl border border-warm-200 dark:border-warm-800">
         <div className="text-[11px] font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider mb-2 flex items-center justify-between px-1">
           <span className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <img 
+              src="/lightbulb-flash-line.svg" 
+              alt="Inquiries" 
+              className="w-3.5 h-3.5 text-amber-500 inline-block align-middle brightness-125" 
+            />
             Allowed Contest Inquiries
           </span>
           {isLoadingDef && (

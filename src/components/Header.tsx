@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Sparkles,
   Flame,
   Award,
   AlertTriangle,
@@ -142,7 +141,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-2xs hover:scale-105 transition-transform"
                 title="Spellbean Pro Lifetime Active"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <img 
+                  src="/lightbulb-flash-line.svg" 
+                  alt="Pro" 
+                  className="w-3.5 h-3.5 text-amber-500 inline-block align-middle brightness-125" 
+                />
                 <span>👑 PRO</span>
               </button>
             ) : (

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
-  Sparkles,
   ArrowRight,
   CheckCircle2,
   XCircle,
@@ -188,7 +187,11 @@ export const DailyPractice: React.FC = () => {
             {/* Left Content Column */}
             <div className="md:col-span-7 space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-200 dark:border-amber-800/60">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <img 
+                  src="/lightbulb-flash-line.svg" 
+                  alt="Lightbulb" 
+                  className="w-4 h-4 text-amber-500 inline-block align-middle brightness-125" 
+                />
                 <span>Small Bean, Big Words</span>
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-serif tracking-tight text-warm-950 dark:text-warm-50 leading-tight">
@@ -293,7 +296,11 @@ export const DailyPractice: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-warm-100 dark:border-warm-800 pb-5">
             <div>
               <h2 className="text-xl font-bold text-warm-900 dark:text-warm-50 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-500" />
+                <img 
+                  src="/lightbulb-flash-line.svg" 
+                  alt="Lightbulb" 
+                  className="w-5 h-5 text-amber-500 inline-block align-middle brightness-125" 
+                />
                 Configure Today's Batch
               </h2>
               <p className="text-xs text-warm-500 dark:text-warm-400 mt-0.5">

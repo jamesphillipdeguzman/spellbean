@@ -5,7 +5,6 @@ import {
   X,
   Play,
   RotateCcw,
-  Sparkles,
   Award,
   AlertTriangle,
   Loader2,
@@ -325,7 +324,11 @@ export const WordModal: React.FC<WordModalProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs text-warm-500 dark:text-warm-400 font-semibold uppercase tracking-wider">
             <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <img 
+                src="/lightbulb-flash-line.svg" 
+                alt="Lightbulb" 
+                className="w-4 h-4 text-amber-500 inline-block align-middle brightness-125" 
+              />
               Letter-by-Letter Breakdown
             </span>
             <span className="font-mono lowercase text-[11px] font-normal">
