@@ -9,6 +9,7 @@ import {
   Clock,
   Sparkles,
   ArrowUpDown,
+  ChevronDown,
   BookOpen,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
@@ -20,9 +21,9 @@ export const MissedVault: React.FC = () => {
   const store = useSpellingStore();
   const { words, startDailySession, settings } = store;
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedWordForModal, setSelectedWordForModal] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'misses' | 'recent' | 'alpha'>('misses');
+  const [sortBy, setSortBy] = useState<'most_missed' | 'least_missed' | 'alphabetical' | 'recent'>('most_missed');
 
   // Filter words that have at least one miss and are not yet mastered
   const missedList: WordRecord[] = Object.values(words).filter(
@@ -30,12 +31,15 @@ export const MissedVault: React.FC = () => {
   );
 
   const filteredList = missedList.filter((w) =>
-    w.word.toLowerCase().includes(searchTerm.trim().toLowerCase())
+    w.word.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+    (w.userNotes && w.userNotes.toLowerCase().includes(searchQuery.trim().toLowerCase()))
   );
 
   filteredList.sort((a, b) => {
-    if (sortBy === 'misses') {
+    if (sortBy === 'most_missed') {
       return b.incorrectCount - a.incorrectCount;
+    } else if (sortBy === 'least_missed') {
+      return a.incorrectCount - b.incorrectCount;
     } else if (sortBy === 'recent') {
       const timeA = a.lastAttempted ? new Date(a.lastAttempted).getTime() : 0;
       const timeB = b.lastAttempted ? new Date(b.lastAttempted).getTime() : 0;
@@ -88,29 +92,36 @@ export const MissedVault: React.FC = () => {
       </div>
 
       {/* Control bar: Search & Sort */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-warm-900 p-4 rounded-2xl border border-warm-200 dark:border-warm-800 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-100/60 dark:bg-slate-900/40 p-2 rounded-2xl border border-slate-200 dark:border-slate-800/80">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-warm-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search missed words..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-warm-900 dark:text-warm-100"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search missed words or notes..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-4 h-4 text-warm-400 shrink-0" />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 text-xs font-semibold bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-700 dark:text-warm-200 focus:outline-none"
-          >
-            <option value="misses">Sort by Most Missed</option>
-            <option value="recent">Sort by Recently Attempted</option>
-            <option value="alpha">Sort Alphabetically (A-Z)</option>
-          </select>
+          <div className="text-slate-400 dark:text-slate-500 p-1">
+            <ArrowUpDown className="w-4 h-4 shrink-0" />
+          </div>
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="appearance-none pl-3.5 pr-9 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all cursor-pointer"
+            >
+              <option value="most_missed" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Sort by Most Missed</option>
+              <option value="least_missed" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Sort by Least Missed</option>
+              <option value="alphabetical" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Alphabetical (A → Z)</option>
+              <option value="recent" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Recently Missed</option>
+            </select>
+            {/* Dropdown Chevron Icon */}
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
         </div>
       </div>
 
@@ -121,10 +132,10 @@ export const MissedVault: React.FC = () => {
             <CheckCircle className="w-8 h-8" />
           </div>
           <h3 className="text-xl font-bold font-serif text-warm-900 dark:text-warm-50">
-            {searchTerm ? 'No matching missed words found' : 'Missed Words Vault is Empty!'}
+            {searchQuery ? 'No matching missed words found' : 'Missed Words Vault is Empty!'}
           </h3>
           <p className="text-xs sm:text-sm text-warm-500 dark:text-warm-400 max-w-md mx-auto">
-            {searchTerm
+            {searchQuery
               ? 'Try adjusting your search filter.'
               : 'Great job! You currently have zero unresolved errors. Run a Daily Practice session or Mock Bee to test your knowledge.'}
           </p>
