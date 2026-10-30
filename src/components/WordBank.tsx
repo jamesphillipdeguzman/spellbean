@@ -10,10 +10,13 @@ import {
   BookOpen,
   ArrowUpDown,
   Play,
+  Upload,
+  PlusCircle,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { WordRecord } from '../types';
 import { WordModal } from './WordModal';
+import { ImportWordsModal } from './ImportWordsModal';
 import { audioService } from '../services/audio';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -27,6 +30,7 @@ export const WordBank: React.FC = () => {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'alpha-asc' | 'alpha-desc' | 'attempts-desc' | 'accuracy-desc'>('alpha-asc');
   const [selectedWordForModal, setSelectedWordForModal] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Filter & Sort calculation
   const filteredWords = useMemo(() => {
@@ -104,9 +108,16 @@ export const WordBank: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import Words (CSV/Excel/PDF)</span>
+            </button>
             <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-              {masteredCount} of 1,604 Mastered ({Math.round((masteredCount / 1604) * 100)}%)
+              {masteredCount} of {wordList.length} Mastered ({wordList.length > 0 ? Math.round((masteredCount / wordList.length) * 100) : 0}%)
             </span>
           </div>
         </div>
@@ -273,6 +284,12 @@ export const WordBank: React.FC = () => {
           onClose={() => setSelectedWordForModal(null)}
         />
       )}
+
+      {/* Custom Word Ingestion Hub Modal */}
+      <ImportWordsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+      />
     </div>
   );
 };

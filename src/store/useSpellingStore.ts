@@ -49,6 +49,7 @@ interface SpellingState {
   updateWordNotes: (word: string, notes: string) => void;
   toggleStarWord: (word: string) => void;
   overrideWordStatus: (word: string, status: WordRecord['status']) => void;
+  addCustomWords: (newWords: string[]) => { addedCount: number; duplicateCount: number };
 
   // Actions - Daily Session
   startDailySession: (batchSize?: number) => void;
@@ -281,6 +282,45 @@ export const useSpellingStore = create<SpellingState>()(
             },
           },
         });
+      },
+
+      addCustomWords: (newWords: string[]) => {
+        const state = get();
+        const updatedWords = { ...state.words };
+        const updatedWordList = [...state.wordList];
+        let addedCount = 0;
+        let duplicateCount = 0;
+
+        for (const rawWord of newWords) {
+          const trimmed = rawWord.trim();
+          if (!trimmed) continue;
+          const key = trimmed.toLowerCase();
+
+          if (updatedWords[key]) {
+            duplicateCount++;
+          } else {
+            updatedWords[key] = {
+              id: key,
+              word: trimmed,
+              status: 'unseen',
+              attempts: 0,
+              correctCount: 0,
+              incorrectCount: 0,
+              consecutiveStreak: 0,
+              userNotes: 'Custom imported word',
+              starred: false,
+            };
+            updatedWordList.push(trimmed);
+            addedCount++;
+          }
+        }
+
+        set({
+          words: updatedWords,
+          wordList: updatedWordList,
+        });
+
+        return { addedCount, duplicateCount };
       },
 
       startDailySession: (batchSizeOverride?: number) => {
@@ -590,6 +630,7 @@ export const useSpellingStore = create<SpellingState>()(
       name: 'spellbean_store_v1',
       partialize: (state) => ({
         words: state.words,
+        wordList: state.wordList,
         settings: state.settings,
         consecutiveDaysStreak: state.consecutiveDaysStreak,
         lastActiveDate: state.lastActiveDate,

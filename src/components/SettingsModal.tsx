@@ -13,13 +13,17 @@ import {
   Moon,
   Sun,
   ShieldAlert,
+  PlusCircle,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { audioService } from '../services/audio';
+import { ImportWordsModal } from './ImportWordsModal';
 
 export const SettingsModal: React.FC = () => {
   const store = useSpellingStore();
   const { settings, updateSettings, exportUserData, importUserData, resetAllProgress } = store;
+
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const [groupedVoices, setGroupedVoices] = useState<{
     philippine: SpeechSynthesisVoice[];
@@ -312,6 +316,13 @@ export const SettingsModal: React.FC = () => {
             onChange={handleImportFile}
             className="hidden"
           />
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs shadow-sm transition-colors flex items-center gap-2"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Import Custom Wordlist (CSV / Excel / PDF)...</span>
+          </button>
         </div>
       </div>
 
@@ -349,6 +360,12 @@ export const SettingsModal: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Custom Word Ingestion Hub Modal */}
+      <ImportWordsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+      />
     </div>
   );
 };
