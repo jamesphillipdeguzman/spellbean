@@ -177,9 +177,9 @@ export function generateFallbackDefinition(word: string): WordDefinition {
       word,
       phonetic: cur.phonetic || `/${word}/`,
       partOfSpeech: cur.partOfSpeech || 'noun',
-      definition: cur.definition || `A competition term and designated entry in the official SOT spelling list.`,
+      definition: cur.definition || `A competition term and designated entry in the convention study list.`,
       exampleSentence: cur.exampleSentence || `The contestant spelled the word ${word} with great precision.`,
-      origin: cur.origin || 'Official SOT Word Bank',
+      origin: cur.origin || 'Convention Word Bank',
     };
   }
 
@@ -202,9 +202,9 @@ export function generateFallbackDefinition(word: string): WordDefinition {
     word,
     phonetic: `/${word}/`,
     partOfSpeech: pos,
-    definition: `Official SOT competition vocabulary word. Ready for practice and contest inquiry.`,
+    definition: `Convention vocabulary study word. Ready for practice and contest inquiry.`,
     exampleSentence: example,
-    origin: 'Official SOT®P Spelling List (2026 Revision)',
+    origin: 'Convention Study Word List (2026 Edition Guidelines)',
   };
 }
 

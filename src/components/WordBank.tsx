@@ -96,11 +96,11 @@ export const WordBank: React.FC = () => {
                 <BookOpen className="w-5 h-5" />
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold font-serif text-warm-900 dark:text-warm-50">
-                Official Word Bank Explorer
+                Word Bank Explorer
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-warm-500 dark:text-warm-400 mt-1">
-              Complete, authoritative 1,604-word list for SOT®P Student Convention spelling competitions.
+              1,604-word study list referenced from the 2026 Student Convention Guidelines.
             </p>
           </div>
 

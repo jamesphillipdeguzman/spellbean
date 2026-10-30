@@ -196,7 +196,7 @@ export const DailyPractice: React.FC = () => {
                 Daily Quota Engine
               </h1>
               <p className="text-amber-100 text-sm max-w-xl leading-relaxed">
-                Stay on track for the SOT®P Student Convention. Your target pace is dynamically computed to exhaust all 1,604 words with 3-streak mastery before convention day.
+                Stay on track for the Student Convention. Your target pace is dynamically computed to exhaust all 1,604 words with 3-streak mastery before convention day.
               </p>
             </div>
 
@@ -482,7 +482,7 @@ export const DailyPractice: React.FC = () => {
               <div className="space-y-6 animate-fadeIn">
                 <div className="p-6 rounded-3xl bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-750">
                   <span className="text-xs uppercase font-bold tracking-wider text-warm-500 dark:text-warm-400 block mb-2">
-                    Official SOT Spelling
+                    Official Spelling
                   </span>
                   <div className="text-4xl sm:text-5xl font-black font-mono tracking-wider text-warm-950 dark:text-warm-50">
                     {currentWord}

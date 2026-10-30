@@ -131,7 +131,7 @@ export const WordModal: React.FC<WordModalProps> = ({ word, isOpen, onClose }) =
             </span>
             <div className="p-4 rounded-2xl bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-800 space-y-3">
               <p className="font-serif leading-relaxed text-base text-warm-900 dark:text-warm-100">
-                {definition?.definition || 'Loading definition from SOT word bank...'}
+                {definition?.definition || 'Loading definition...'}
               </p>
               {definition?.exampleSentence && (
                 <div className="pt-2 border-t border-warm-200 dark:border-warm-750">

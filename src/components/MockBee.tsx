@@ -107,13 +107,13 @@ export const MockBee: React.FC = () => {
         <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-amber-500/10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-amber-100 text-xs font-semibold mb-3">
             <Trophy className="w-3.5 h-3.5" />
-            <span>SOT®P Official Convention Rules</span>
+            <span>Convention Guidelines (2026 Edition)</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold font-serif tracking-tight text-white mb-2">
             Contest Simulation (Mock Bee)
           </h1>
           <p className="text-amber-100 text-sm max-w-xl leading-relaxed">
-            Experience the authentic pressure of the Student Convention spelling competition. Under official rules, words are pronounced twice with definitions, but feedback is strictly deferred until the entire round concludes.
+            Experience realistic preparation for the Student Convention spelling competition. Per convention guidelines, words are pronounced twice with definitions, but feedback is strictly deferred until the round concludes.
           </p>
         </div>
 
@@ -156,7 +156,7 @@ export const MockBee: React.FC = () => {
                 2 Unscored Practice Words
               </span>
               <p className="text-xs text-warm-500 dark:text-warm-400">
-                Official SOT Rule: Judges provide two warm-up practice words before competitive scoring begins.
+                Convention Guidelines: Judges provide two warm-up practice words before competitive scoring begins.
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -212,7 +212,7 @@ export const MockBee: React.FC = () => {
           >
             <Play className="w-5 h-5 fill-current" />
             <span>
-              Start Official Contest Round ({selectedCount} Words
+              Start Simulated Contest Round ({selectedCount} Words
               {includePractice ? ' + 2 Practice' : ''})
             </span>
           </button>
@@ -244,7 +244,7 @@ export const MockBee: React.FC = () => {
 
           <div className="flex items-center gap-2 text-xs font-semibold text-warm-500 dark:text-warm-400">
             <Clock className="w-4 h-4 text-amber-500" />
-            <span>Official Examination Round</span>
+            <span>Simulated Contest Round</span>
           </div>
         </div>
 
@@ -252,7 +252,7 @@ export const MockBee: React.FC = () => {
         <div className="p-3.5 bg-warm-100 dark:bg-warm-850 rounded-2xl border border-warm-200 dark:border-warm-750 flex items-center gap-3 text-xs text-warm-600 dark:text-warm-300">
           <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
           <span>
-            <strong>Official Contest Guidelines:</strong> Feedback and spelling corrections are strictly deferred until you turn in your exam sheet at the end.
+            <strong>Convention Guidelines:</strong> Feedback and spelling corrections are strictly deferred until you turn in your exam sheet at the end.
           </span>
         </div>
 
@@ -281,7 +281,7 @@ export const MockBee: React.FC = () => {
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck="false"
-                  placeholder="Type your official spelling..."
+                  placeholder="Type your spelling..."
                   className="w-full text-center py-4 px-6 text-2xl sm:text-3xl font-mono font-semibold tracking-wider bg-warm-50 dark:bg-warm-850 border-2 border-warm-300 dark:border-warm-700 rounded-2xl focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 text-warm-900 dark:text-warm-100 transition-all placeholder:text-warm-400 placeholder:text-lg placeholder:font-sans placeholder:tracking-normal"
                 />
 
@@ -357,7 +357,7 @@ export const MockBee: React.FC = () => {
 
         <div className="space-y-1">
           <span className="text-xs uppercase font-bold tracking-wider text-warm-500 dark:text-warm-400">
-            Official Contest Scorecard
+            Contest Simulation Scorecard
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold font-serif text-warm-900 dark:text-warm-50">
             {medalTitle}

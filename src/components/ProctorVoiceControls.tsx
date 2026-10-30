@@ -157,7 +157,7 @@ export const ProctorVoiceControls: React.FC<ProctorVoiceControlsProps> = ({
   const handleInquiryOrigin = async () => {
     const def = definitionData || (await fetchWordDefinition(word));
     setActiveInquiry('origin');
-    const origin = def.origin || 'Official SOT Word Bank list';
+    const origin = def.origin || 'Convention Word Bank (2026 Edition Guidelines)';
     setInquiryText(`Origin / Root: ${origin}`);
 
     audioService.speakText(`Language of origin: ${origin}`, {

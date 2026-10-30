@@ -1,8 +1,10 @@
 # 🐝 Spellbean
 
-**Spellbean** is a focused, distraction-free spelling competition trainer built specifically to help students prepare for the **School of Tomorrow (SOT®P) National and Junior Student Convention** spelling events.
+**Spellbean** is an independent, non-commercial practice and study companion created to help students prepare for student convention spelling events based on the 2026 Student Convention Guidelines.
 
-Official convention rules mandate that judges pronounce each word twice and read its definition aloud while the contestant writes the word on paper. Alternative or British spellings are strictly prohibited; every entry must conform exactly to the official 1,604-word competition list.
+Convention rules mandate that judges pronounce each word twice and read its definition aloud while the contestant writes the word on paper. Alternative or British spellings are strictly prohibited; every entry must conform to the 1,604-word convention study list.
+
+> **Disclaimer:** Spellbean is an independent study companion and is not affiliated with, authorized, maintained, sponsored, or officially endorsed by School of Tomorrow® Philippines or Accelerated Christian Education, Inc.
 
 ---
 

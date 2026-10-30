@@ -82,7 +82,7 @@ export async function fetchWordDefinition(word: string): Promise<WordDefinition>
           for (const m of item.meanings) {
             if (m.definitions && m.definitions.length > 0) {
               for (const d of m.definitions) {
-                if (d.definition && (!definition || definition.includes('Official SOT'))) {
+                if (d.definition && (!definition || definition.includes('Convention vocabulary') || definition.includes('competition term') || definition.includes('Official SOT'))) {
                   definition = d.definition;
                 }
                 if (d.example && (!exampleSentence || exampleSentence.includes('spelled the word'))) {

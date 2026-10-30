@@ -94,12 +94,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
                 <span className="font-extrabold text-xl tracking-tight text-warm-950 dark:text-warm-50 font-serif">
                   Spellbean
                 </span>
-                <span className="hidden md:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40">
-                  SOT®P Official 1,604
+                <span className="hidden md:inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40">
+                  STUDY COMPANION • 1,604 WORDS
                 </span>
               </div>
               <p className="text-[11px] text-warm-500 dark:text-warm-400 font-medium">
-                Student Convention Spelling Competition Trainer
+                Independent Practice & Study Trainer for Student Convention Spellers
               </p>
             </div>
           </div>
