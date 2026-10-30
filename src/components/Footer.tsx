@@ -104,3 +104,4 @@ export const Footer: React.FC<FooterProps> = ({ onOpenShortcuts }) => {
 };
 
 export default Footer;
+
