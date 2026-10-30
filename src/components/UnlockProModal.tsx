@@ -66,25 +66,25 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative z-[121] w-full max-w-md rounded-3xl bg-white dark:bg-warm-900 p-6 sm:p-7 shadow-2xl border border-amber-100 dark:border-warm-800 space-y-5 animate-in fade-in zoom-in-95 duration-200 my-auto"
+        className="relative z-[121] w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-200 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-warm-100 dark:border-warm-800 pb-4">
+        <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 text-2xl text-white">
               👑
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-extrabold text-warm-950 dark:text-warm-50 font-serif">
+                <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-serif">
                   Spellbean Pro
                 </h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300/60 uppercase">
                   Lifetime
                 </span>
               </div>
-              <p className="text-xs text-warm-500 dark:text-warm-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Studio Neural Voices & Custom Word Ingestion
               </p>
             </div>
@@ -92,7 +92,7 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
 
           <button
             onClick={onClose}
-            className="rounded-xl p-1.5 text-warm-400 hover:bg-warm-100 dark:hover:bg-warm-800 hover:text-warm-700 dark:hover:text-warm-200 transition"
+            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition"
             title="Close (Esc)"
           >
             <X className="w-5 h-5" />
@@ -111,32 +111,32 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
         )}
 
         {/* Feature Highlights */}
-        <div className="space-y-2.5 py-1">
-          <div className="flex items-start gap-3 p-2.5 rounded-2xl bg-warm-50 dark:bg-warm-850 border border-warm-100 dark:border-warm-800">
-            <div className="p-1.5 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 shrink-0">
-              <Sparkles className="w-4 h-4 fill-current" />
+        <div className="space-y-3 py-1">
+          <div className="bg-slate-900/80 dark:bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 fill-current" />
             </div>
-            <div className="text-xs">
-              <span className="font-bold text-warm-900 dark:text-warm-100 block">
+            <div>
+              <span className="text-base font-bold text-slate-100 dark:text-white block">
                 Realistic Neural Studio Voices
               </span>
-              <span className="text-warm-500 dark:text-warm-400 text-[11px] leading-relaxed block">
+              <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed mt-0.5">
                 Authentic Philippine English proctors (James & Rosa Neural) and Jenny US for authentic convention drills.
-              </span>
+              </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-2.5 rounded-2xl bg-warm-50 dark:bg-warm-850 border border-warm-100 dark:border-warm-800">
-            <div className="p-1.5 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 shrink-0">
-              <Zap className="w-4 h-4" />
+          <div className="bg-slate-900/80 dark:bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+              <Zap className="w-5 h-5" />
             </div>
-            <div className="text-xs">
-              <span className="font-bold text-warm-900 dark:text-warm-100 block">
+            <div>
+              <span className="text-base font-bold text-slate-100 dark:text-white block">
                 Full Document Ingestion Hub
               </span>
-              <span className="text-warm-500 dark:text-warm-400 text-[11px] leading-relaxed block">
+              <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed mt-0.5">
                 Parse school bee wordlists directly from Excel workbooks (.xlsx) and PDF competition booklets.
-              </span>
+              </p>
             </div>
           </div>
         </div>

@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { WordRecord, WordDefinition } from '../types';
 import { useSpellingStore } from '../store/useSpellingStore';
+import { useLicenseStore } from '../store/licenseStore';
 import { fetchWordDefinition } from '../services/dictionary';
 import { audioService } from '../services/audio';
+import { UnlockProModal } from './UnlockProModal';
 
 export interface WordModalProps {
   word?: string | null;
@@ -34,6 +36,11 @@ export const WordModal: React.FC<WordModalProps> = ({
   const words = useSpellingStore((s) => s.words);
   const settings = useSpellingStore((s) => s.settings);
   const toggleMissedVaultWord = useSpellingStore((s) => s.toggleMissedVaultWord);
+  const isProUnlocked = useLicenseStore((s) => s.isProUnlocked);
+
+  // Pro gate modal
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [unlockReason, setUnlockReason] = useState<string | undefined>(undefined);
 
   // Normalize target word string
   const activeWordString = (selectedWordProp?.word || wordProp || '').trim();
@@ -46,7 +53,7 @@ export const WordModal: React.FC<WordModalProps> = ({
   // Animated letter-by-letter spelling states
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [isSpellingActive, setIsSpellingActive] = useState(false);
-  const [speedMode, setSpeedMode] = useState<'normal' | 'slow'>('slow');
+  const [speedMode, setSpeedMode] = useState<'slow' | 'normal' | 'fast'>('slow');
 
   // Cancel reference to cleanly abort timeouts/intervals on close or stop
   const cancelDrillRef = useRef<(() => void) | null>(null);
@@ -193,10 +200,22 @@ export const WordModal: React.FC<WordModalProps> = ({
     // Ensure effective active voice is resolved and verified
     const activeVoice = settings.selectedVoiceURI || 'en-PH-JamesNeural';
     // Deliberate cadence for spellers:
-    // "slow" mode (default): rate 0.85, 300ms clean gap between letters for natural pacing without overlap
-    // "normal" mode: rate 1.0, 150ms gap
-    const letterRate = speedMode === 'slow' ? 0.85 : 1.0;
-    const postLetterPause = speedMode === 'slow' ? 300 : 150;
+    // "slow" mode (default): rate 0.85, 300ms clean gap between letters
+    // "normal" mode: rate 1.0, 150ms gap, 600ms final pause
+    // "fast" mode (Pro Exclusive): 220ms per letter (rate 1.25, 70ms pause), 350ms final pause
+    let letterRate = 0.85;
+    let postLetterPause = 300;
+    let finalPause = 600;
+
+    if (speedMode === 'normal') {
+      letterRate = 1.0;
+      postLetterPause = 150;
+      finalPause = 600;
+    } else if (speedMode === 'fast') {
+      letterRate = 1.25;
+      postLetterPause = 70;
+      finalPause = 350;
+    }
 
     try {
       // Step 1: Jump straight into spelling letters sequentially (no initial whole word)
@@ -224,15 +243,15 @@ export const WordModal: React.FC<WordModalProps> = ({
 
       if (isAborted) return;
 
-      // Step 2: Clean pause (approx. 600ms) after final letter
+      // Step 2: Clean pause (600ms for slow/normal, 350ms for fast) after final letter
       setHighlightedIndex(null);
-      await cancellableDelay(600);
+      await cancellableDelay(finalPause);
 
       if (isAborted) return;
 
       // Step 3: Pronounce full word at the very end as closing resolution
       await audioService.speakTextAsync(displayWord, {
-        rate: settings.speechRate,
+        rate: speedMode === 'fast' ? Math.min(1.15, settings.speechRate * 1.15) : settings.speechRate,
         pitch: settings.speechPitch,
         volume: settings.speechVolume,
         voiceURI: activeVoice,
@@ -360,6 +379,16 @@ export const WordModal: React.FC<WordModalProps> = ({
             <div className="flex items-center gap-1 text-xs">
               <div className="flex items-center p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button
+                  onClick={() => setSpeedMode('slow')}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition ${
+                    speedMode === 'slow'
+                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Slow
+                </button>
+                <button
                   onClick={() => setSpeedMode('normal')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     speedMode === 'normal'
@@ -370,14 +399,28 @@ export const WordModal: React.FC<WordModalProps> = ({
                   Normal
                 </button>
                 <button
-                  onClick={() => setSpeedMode('slow')}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition ${
-                    speedMode === 'slow'
-                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                  onClick={() => {
+                    if (!isProUnlocked) {
+                      setUnlockReason(
+                        "Rapid 'Blitz' spelling drill (220ms/letter) is an exclusive Spellbean Pro training feature."
+                      );
+                      setShowUnlockModal(true);
+                      return;
+                    }
+                    setSpeedMode('fast');
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                    speedMode === 'fast'
+                      ? 'bg-amber-500 text-white shadow-sm'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  Slow
+                  <span>Fast</span>
+                  {!isProUnlocked && (
+                    <span className="text-[10px] bg-amber-500/20 text-amber-600 dark:text-amber-300 px-1 rounded font-bold">
+                      PRO
+                    </span>
+                  )}
                 </button>
               </div>
 
@@ -455,6 +498,13 @@ export const WordModal: React.FC<WordModalProps> = ({
             <span>{isInVault ? 'Remove from Missed Vault' : 'Add to Missed Vault'}</span>
           </button>
         </div>
+
+        {/* Pro Unlock Modal */}
+        <UnlockProModal
+          isOpen={showUnlockModal}
+          onClose={() => setShowUnlockModal(false)}
+          reason={unlockReason}
+        />
       </div>
     </div>
   );
