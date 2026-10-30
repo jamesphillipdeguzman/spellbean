@@ -182,6 +182,53 @@ export const DailyPractice: React.FC = () => {
 
     return (
       <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
+        {/* Welcome Hero Banner (Split Banner) */}
+        <div className="bg-white dark:bg-warm-900 rounded-3xl p-6 sm:p-8 border border-warm-200 dark:border-warm-800 shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Left Content Column */}
+            <div className="md:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-200 dark:border-amber-800/60">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Small Bean, Big Words</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-serif tracking-tight text-warm-950 dark:text-warm-50 leading-tight">
+                Train Daily for the Student Convention
+              </h1>
+              <p className="text-sm text-warm-600 dark:text-warm-300 leading-relaxed">
+                Master all 1,604 vocabulary words with an authentic virtual proctor, audio double-pronunciation cadence, and dual pen-and-paper or typing practice modes.
+              </p>
+
+              {/* Quick Feature Badges */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-200 font-medium">
+                  <Target className="w-3.5 h-3.5 text-amber-500" />
+                  {remainingDays} Days to Convention
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-200 font-medium">
+                  <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                  {masteredCount} Mastered (3x)
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-200 font-medium">
+                  <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  {consecutiveDaysStreak} Day Streak
+                </span>
+              </div>
+            </div>
+
+            {/* Right Image Column */}
+            <div className="md:col-span-5 flex justify-center">
+              <div className="relative w-full max-w-sm rounded-2xl overflow-hidden ring-4 ring-amber-100 dark:ring-amber-950/60 shadow-md">
+                <img
+                  src="/hero.webp"
+                  alt="Spelling bee student studying"
+                  className="object-cover w-full h-56 sm:h-64 md:h-72 max-h-72 md:max-h-80 rounded-2xl border border-amber-100 dark:border-amber-900/40 shadow-sm transition-transform duration-300 hover:scale-105"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Daily Quota & Convention Countdown Hero */}
         <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-amber-500/10 relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
