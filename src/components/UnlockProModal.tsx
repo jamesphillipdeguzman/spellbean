@@ -4,6 +4,7 @@ import {
   Sparkles,
   X,
   CheckCircle2,
+  Key,
   KeyRound,
   ShieldCheck,
   Zap,
@@ -24,7 +25,7 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
   reason,
 }) => {
   const { isProUnlocked, verifyKey, licenseCode, relockPro } = useLicenseStore();
-  const [licenseInput, setLicenseInput] = useState('');
+  const [licenseKey, setLicenseKey] = useState('');
   const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   // Close on Escape key
@@ -46,15 +47,15 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!licenseInput.trim()) return;
+    if (!licenseKey.trim()) return;
 
-    const result = verifyKey(licenseInput.trim());
+    const result = verifyKey(licenseKey.trim());
     setFeedback(result);
 
     if (result.success) {
       setTimeout(() => {
         setFeedback(null);
-        setLicenseInput('');
+        setLicenseKey('');
         onClose();
       }, 1500);
     }
@@ -66,25 +67,25 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative z-[121] w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-200 my-auto"
+        className="relative z-[121] w-full max-w-md rounded-3xl bg-[#131722] p-6 sm:p-7 shadow-2xl border border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-200 my-auto text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex items-start justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 text-2xl text-white">
               👑
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-serif">
+                <h3 className="text-xl font-extrabold text-white font-serif">
                   Spellbean Pro
                 </h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300/60 uppercase">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
                   Lifetime
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Studio Neural Voices & Custom Word Ingestion
               </p>
             </div>
@@ -173,54 +174,56 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
                 <span>⚡</span> Unlock Lifetime Access — ₱399 (GCash / Maya / Card)
               </a>
 
-              <p className="text-[11px] text-center text-warm-500 dark:text-warm-400 flex items-center justify-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <p className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span>One-time payment • Instant activation • No subscriptions</span>
               </p>
             </div>
 
-            {/* Divider */}
-            <div className="relative flex items-center justify-center my-1">
-              <div className="border-t border-warm-200 dark:border-warm-800 w-full" />
-              <span className="bg-white dark:bg-warm-900 px-3 text-[11px] text-warm-400 font-medium uppercase tracking-wider shrink-0">
-                Or Enter License Key / Promo Code
+            {/* Section Divider ("OR ENTER LICENSE KEY / PROMO CODE") */}
+            <div className="relative my-4 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-800"></div>
+              </div>
+              <span className="relative px-3 bg-[#131722] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                Or enter license key / promo code
               </span>
             </div>
 
             {/* Manual Key / Promo Code Activation */}
-            <form onSubmit={handleVerify} className="space-y-2">
+            <form onSubmit={handleVerify} className="space-y-3">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-400" />
+                  <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <input
                     type="text"
-                    value={licenseInput}
-                    onChange={(e) => setLicenseInput(e.target.value)}
-                    placeholder="e.g. SPELLCHAMP2027 or PRO-XXXX"
-                    className="w-full pl-9 pr-3 py-2 text-xs font-mono bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-warm-900 dark:text-warm-100 uppercase"
+                    value={licenseKey}
+                    onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
+                    placeholder="E.G. SPELLCHAMP2027 OR PRO-XXXX"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 dark:bg-slate-950/80 border border-slate-700 focus:border-amber-500 text-white dark:text-slate-100 placeholder-slate-500 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all uppercase"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-warm-900 dark:bg-warm-100 hover:bg-warm-800 dark:hover:bg-white text-white dark:text-warm-900 font-bold text-xs transition active:scale-95 flex items-center gap-1 shrink-0"
+                  onClick={handleVerify}
+                  className="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 font-semibold text-sm flex items-center gap-1.5 transition-all shrink-0"
                 >
-                  <span>Verify</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  Verify <span>&rarr;</span>
                 </button>
               </div>
 
               {feedback && (
                 <div
-                  className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${
+                  className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
                     feedback.success
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                      : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800'
+                      : 'bg-rose-950/60 text-rose-300 border border-rose-800'
                   }`}
                 >
                   {feedback.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   ) : (
-                    <X className="w-4 h-4 text-rose-500 shrink-0" />
+                    <X className="w-4 h-4 text-rose-400 shrink-0" />
                   )}
                   <span>{feedback.message}</span>
                 </div>
