@@ -249,10 +249,10 @@ export const MockBee: React.FC = () => {
         </div>
 
         {/* Deferred Feedback Alert Banner */}
-        <div className="p-3.5 bg-warm-100 dark:bg-warm-850 rounded-2xl border border-warm-200 dark:border-warm-750 flex items-center gap-3 text-xs text-warm-600 dark:text-warm-300">
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs sm:text-sm">
           <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
           <span>
-            <strong>Convention Guidelines:</strong> Feedback and spelling corrections are strictly deferred until you turn in your exam sheet at the end.
+            <strong className="font-semibold text-amber-950 dark:text-amber-300">Convention Guidelines:</strong> Feedback and spelling corrections are strictly deferred until you turn in your exam sheet at the end.
           </span>
         </div>
 
@@ -281,8 +281,8 @@ export const MockBee: React.FC = () => {
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck="false"
-                  placeholder="Type your spelling..."
-                  className="w-full text-center py-4 px-6 text-2xl sm:text-3xl font-mono font-semibold tracking-wider bg-warm-50 dark:bg-warm-850 border-2 border-warm-300 dark:border-warm-700 rounded-2xl focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 text-warm-900 dark:text-warm-100 transition-all placeholder:text-warm-400 placeholder:text-lg placeholder:font-sans placeholder:tracking-normal"
+                  placeholder="Type the spelling here..."
+                  className="w-full text-center py-4 px-6 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-mono text-2xl font-bold tracking-widest focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
                 />
 
                 <div className="flex justify-center">

@@ -611,8 +611,8 @@ export const DailyPractice: React.FC = () => {
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck="false"
-                  placeholder="Type your spelling here..."
-                  className="w-full text-center py-4 px-6 text-2xl sm:text-3xl font-mono font-semibold tracking-wider bg-warm-50 dark:bg-warm-850 border-2 border-warm-300 dark:border-warm-700 rounded-2xl focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 text-warm-900 dark:text-warm-100 transition-all placeholder:text-warm-400 placeholder:text-lg placeholder:font-sans placeholder:tracking-normal"
+                  placeholder="Type the spelling here..."
+                  className="w-full text-center py-4 px-6 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-mono text-2xl sm:text-3xl font-bold tracking-widest focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
                 />
               </div>
 
