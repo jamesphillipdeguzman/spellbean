@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Filter,
@@ -83,6 +83,22 @@ export const WordBank: React.FC = () => {
 
     return result;
   }, [words, activeKeys, selectedStatus, selectedLetter, searchTerm, sortBy]);
+
+  // Pagination State & Slicing Logic (200 words per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const WORDS_PER_PAGE = 200;
+
+  // Reset to page 1 whenever search query, letter filter, or status filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedStatus, selectedLetter, sortBy]);
+
+  // Calculate slice range
+  const totalItems = filteredWords.length;
+  const totalPages = Math.ceil(totalItems / WORDS_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * WORDS_PER_PAGE;
+  const endIndex = Math.min(startIndex + WORDS_PER_PAGE, totalItems);
+  const currentBatchWords = filteredWords.slice(startIndex, endIndex);
 
   const handlePronounce = (word: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -238,14 +254,14 @@ export const WordBank: React.FC = () => {
       </div>
 
       {/* Words Count & Results Info */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-warm-500 dark:text-warm-400 px-2 gap-1">
-        <span>
-          {isPro
-            ? `Showing ${filteredWords.length} words`
-            : `Showing ${filteredWords.length} of 1,604 official competition words (Free Tier)`}
-        </span>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400 px-2 gap-1">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Showing {totalItems === 0 ? 0 : `${startIndex + 1}–${endIndex}`} of {totalItems} words
+          {!isPro && ` (${TOTAL_OFFICIAL_WORDS} Total in SOTP Syllabus)`}
+          {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+        </p>
         {selectedLetter && (
-          <span>
+          <span className="text-xs">
             Filtered by letter: <strong>{selectedLetter}</strong>
           </span>
         )}
@@ -253,7 +269,7 @@ export const WordBank: React.FC = () => {
 
       {/* Word Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {filteredWords.map((record) => {
+        {currentBatchWords.map((record) => {
           return (
             <div
               key={record.id}
@@ -294,6 +310,55 @@ export const WordBank: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Pagination Controls UI */}
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+          {/* Previous Button */}
+          <button
+            onClick={() => {
+              setCurrentPage((prev) => Math.max(prev - 1, 1));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            disabled={currentPage === 1}
+            className="px-3.5 py-2 text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+          >
+            &larr; Prev
+          </button>
+
+          {/* Page Number Buttons */}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => {
+                  setCurrentPage(page);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition cursor-pointer ${
+                  currentPage === page
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                    : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={() => {
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            disabled={currentPage === totalPages}
+            className="px-3.5 py-2 text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+          >
+            Next &rarr;
+          </button>
+        </div>
+      )}
 
       {/* Free Tier Gating Banner */}
       {!isPro && (
