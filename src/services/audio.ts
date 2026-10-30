@@ -1,3 +1,5 @@
+import { useLicenseStore } from '../store/licenseStore';
+
 export interface AudioProctorCallbacks {
   onStartFirst?: () => void;
   onPauseStart?: (secondsLeft: number) => void;
@@ -231,8 +233,9 @@ class AudioEngine {
     const rate = options.rate ?? 0.85;
     const volume = options.volume ?? 1.0;
 
-    // Check if user selected an Edge Neural Voice
-    if (isNeuralVoice(voiceURI) && typeof navigator !== 'undefined' && navigator.onLine) {
+    // Check if user selected an Edge Neural Voice (Gated by Pro license)
+    const isPro = useLicenseStore.getState().isProUnlocked;
+    if (isNeuralVoice(voiceURI) && isPro && typeof navigator !== 'undefined' && navigator.onLine) {
       try {
         await this.playNeuralSpeechAsync(text, voiceURI, rate, volume);
         return;
@@ -382,8 +385,9 @@ class AudioEngine {
     const voiceURI = options.voiceURI || 'en-PH-JamesNeural';
     const volume = options.volume ?? 1.0;
 
-    // Check if neural voice pipeline can be used
-    if (isNeuralVoice(voiceURI) && typeof navigator !== 'undefined' && navigator.onLine) {
+    // Check if neural voice pipeline can be used (Gated by Pro license)
+    const isPro = useLicenseStore.getState().isProUnlocked;
+    if (isNeuralVoice(voiceURI) && isPro && typeof navigator !== 'undefined' && navigator.onLine) {
       this.pronounceNeuralCadence(word, voiceURI, rate, volume, pauseDuration, callbacks).catch((err) => {
         if (this.isUserStopped) return;
         console.warn('Neural cadence error (falling back to device speech):', err);

@@ -456,13 +456,15 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                        <button
-                          onClick={handleSimulatedPurchase}
+                        <a
+                          href="https://pm.link/org-gaeypCEUR9YGrVTZSG6ejSZd/H69lMME"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
                         >
                           <Sparkles className="w-4 h-4 fill-current" />
-                          <span>Unlock All Formats (One-Time ₱299 / $5.99)</span>
-                        </button>
+                          <span>Unlock Lifetime Access — ₱399 (GCash / Maya / Card)</span>
+                        </a>
                       </div>
 
                       {/* Promo Code Form */}
@@ -554,13 +556,15 @@ export const ImportWordsModal: React.FC<ImportWordsModalProps> = ({ isOpen, onCl
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                        <button
-                          onClick={handleSimulatedPurchase}
+                        <a
+                          href="https://pm.link/org-gaeypCEUR9YGrVTZSG6ejSZd/H69lMME"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
                         >
                           <Sparkles className="w-4 h-4 fill-current" />
-                          <span>Unlock All Formats (One-Time ₱299 / $5.99)</span>
-                        </button>
+                          <span>Unlock Lifetime Access — ₱399 (GCash / Maya / Card)</span>
+                        </a>
                       </div>
 
                       {/* Promo Code Form */}

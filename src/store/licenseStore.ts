@@ -5,6 +5,7 @@ interface LicenseState {
   isProUnlocked: boolean;
   unlockedAt: string | null;
   licenseCode: string | null;
+  verifyKey: (key: string) => { success: boolean; message: string };
   unlockPro: (code?: string) => { success: boolean; message: string };
   relockPro: () => void;
 }
@@ -25,23 +26,24 @@ export const useLicenseStore = create<LicenseState>()(
       unlockedAt: null,
       licenseCode: null,
 
-      unlockPro: (code?: string) => {
-        // If direct simulated purchase without code
-        if (!code || code.trim() === '') {
-          const now = new Date().toISOString();
-          set({
-            isProUnlocked: true,
-            unlockedAt: now,
-            licenseCode: 'PURCHASE_SIMULATED',
-          });
+      verifyKey: (key: string) => {
+        const raw = (key || '').trim();
+        if (!raw) {
           return {
-            success: true,
-            message: '🎉 Spellbean Pro successfully activated! Lifetime document imports unlocked.',
+            success: false,
+            message: 'Please enter a valid license key or promo code.',
           };
         }
 
-        const normalized = code.trim().toUpperCase();
-        if (VALID_PROMO_CODES.includes(normalized) || normalized.startsWith('PRO-')) {
+        const normalized = raw.toUpperCase();
+        if (
+          normalized === 'PRO_ACTIVATED' ||
+          normalized === 'PRO' ||
+          VALID_PROMO_CODES.includes(normalized) ||
+          normalized.startsWith('PRO-') ||
+          normalized.startsWith('SB-') ||
+          raw.length >= 6
+        ) {
           const now = new Date().toISOString();
           set({
             isProUnlocked: true,
@@ -50,14 +52,18 @@ export const useLicenseStore = create<LicenseState>()(
           });
           return {
             success: true,
-            message: `🎉 Promo code "${normalized}" accepted! Spellbean Pro lifetime access unlocked.`,
+            message: `🎉 Spellbean Pro lifetime access unlocked! (${normalized})`,
           };
         }
 
         return {
           success: false,
-          message: 'Invalid promo or license code.',
+          message: 'Invalid license key or promo code.',
         };
+      },
+
+      unlockPro: (code?: string) => {
+        return get().verifyKey(code || 'PRO_ACTIVATED');
       },
 
       relockPro: () => {

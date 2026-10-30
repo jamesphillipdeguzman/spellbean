@@ -17,14 +17,19 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
+import { useLicenseStore } from '../store/licenseStore';
 import { audioService, NEURAL_VOICES, isNeuralVoice } from '../services/audio';
 import { ImportWordsModal } from './ImportWordsModal';
+import { UnlockProModal } from './UnlockProModal';
 
 export const SettingsModal: React.FC = () => {
   const store = useSpellingStore();
   const { settings, updateSettings, exportUserData, importUserData, resetAllProgress } = store;
+  const isProUnlocked = useLicenseStore((s) => s.isProUnlocked);
 
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [unlockReason, setUnlockReason] = useState<string | undefined>(undefined);
 
   const [groupedVoices, setGroupedVoices] = useState<{
     philippine: SpeechSynthesisVoice[];
@@ -53,6 +58,24 @@ export const SettingsModal: React.FC = () => {
       }
     };
   }, []);
+
+  const handleVoiceChange = (newVoiceURI: string) => {
+    if (isNeuralVoice(newVoiceURI) && !isProUnlocked) {
+      // Revert selection to a device offline voice if current was neural
+      const fallbackVoice =
+        (!isNeuralVoice(settings.selectedVoiceURI) && settings.selectedVoiceURI) ||
+        audioService.getDefaultBrowserVoice()?.voiceURI ||
+        '';
+      updateSettings({ selectedVoiceURI: fallbackVoice });
+      setUnlockReason(
+        'Realistic Neural Voices (Philippine English James & Rosa, US Jenny) are a Spellbean Pro feature. Unlock lifetime access to enable studio proctor voices.'
+      );
+      setShowUnlockModal(true);
+      return;
+    }
+
+    updateSettings({ selectedVoiceURI: newVoiceURI });
+  };
 
   const handleTestVoice = () => {
     audioService.pronounceWordOfficialCadence('adolescence', {
@@ -158,28 +181,38 @@ export const SettingsModal: React.FC = () => {
             <label className="text-xs font-semibold text-warm-600 dark:text-warm-300 block">
               Proctor Voice:
             </label>
-            {isNeuralVoice(settings.selectedVoiceURI || 'en-PH-JamesNeural') ? (
+            {isNeuralVoice(settings.selectedVoiceURI || 'en-PH-JamesNeural') && isProUnlocked ? (
               <span className="text-[10px] font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300/80 dark:border-amber-700 flex items-center gap-1 shadow-2xs">
                 <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
-                <span>Studio Neural (Edge AI)</span>
+                <span>Studio Neural (Pro Unlocked)</span>
               </span>
+            ) : isNeuralVoice(settings.selectedVoiceURI || 'en-PH-JamesNeural') && !isProUnlocked ? (
+              <button
+                onClick={() => {
+                  setUnlockReason('Upgrade to Spellbean Pro to activate realistic Philippine and US neural voices.');
+                  setShowUnlockModal(true);
+                }}
+                className="text-[10px] font-bold text-amber-900 dark:text-amber-100 bg-amber-200 dark:bg-amber-900 px-2 py-0.5 rounded-full border border-amber-400 flex items-center gap-1 hover:bg-amber-300 transition"
+              >
+                <span>🔒 [PRO GATED] Unlock Neural</span>
+              </button>
             ) : (
               <span className="text-[10px] font-semibold text-warm-600 dark:text-warm-300 bg-warm-100 dark:bg-warm-800 px-2 py-0.5 rounded-full border border-warm-200 dark:border-warm-700 flex items-center gap-1">
-                <span>Device Offline</span>
+                <span>Device Offline Voice</span>
               </span>
             )}
           </div>
 
           <select
-            value={settings.selectedVoiceURI || 'en-PH-JamesNeural'}
-            onChange={(e) => updateSettings({ selectedVoiceURI: e.target.value })}
+            value={settings.selectedVoiceURI || (isProUnlocked ? 'en-PH-JamesNeural' : '')}
+            onChange={(e) => handleVoiceChange(e.target.value)}
             className="w-full px-3 py-2 text-xs bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-800 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
           >
             {/* Realistic Neural Voices Section */}
-            <optgroup label="⚡ Realistic Neural Voices (Online / AI)">
+            <optgroup label="⚡ Realistic Neural Voices (Online / AI) [PRO]">
               {NEURAL_VOICES.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.lang.startsWith('en-PH') ? '🇵🇭' : '🇺🇸'} {v.name}
+                  {v.lang.startsWith('en-PH') ? '🇵🇭' : '🇺🇸'} [PRO] {v.name}
                 </option>
               ))}
             </optgroup>
@@ -375,6 +408,13 @@ export const SettingsModal: React.FC = () => {
       <ImportWordsModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
+      />
+
+      {/* Spellbean Pro Unlock Modal */}
+      <UnlockProModal
+        isOpen={showUnlockModal}
+        onClose={() => setShowUnlockModal(false)}
+        reason={unlockReason}
       />
     </div>
   );

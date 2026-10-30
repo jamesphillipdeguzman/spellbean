@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sparkles,
   Flame,
@@ -13,6 +13,8 @@ import {
   Target,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
+import { useLicenseStore } from '../store/licenseStore';
+import { UnlockProModal } from './UnlockProModal';
 
 interface HeaderProps {
   onOpenShortcuts: () => void;
@@ -35,6 +37,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
   const targetQuota = getDailyTargetQuota();
   const missedCount = getMissedWords().length;
   const masteredCount = Object.values(words).filter((w) => w.status === 'mastered').length;
+  const isProUnlocked = useLicenseStore((s) => s.isProUnlocked);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
 
   const toggleDarkMode = () => {
     const nextDark = !settings.darkMode;
@@ -124,6 +128,28 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
               <span>{masteredCount} / 1,604</span>
             </div>
 
+            {/* Spellbean Pro Badge / Upgrade CTA */}
+            {isProUnlocked ? (
+              <button
+                onClick={() => setShowUnlockModal(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-2xs hover:scale-105 transition-transform"
+                title="Spellbean Pro Lifetime Active"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <span>👑 PRO</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowUnlockModal(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-xs hover:scale-105 transition-all"
+                title="Upgrade to Spellbean Pro"
+              >
+                <span>⚡</span>
+                <span className="hidden sm:inline">Get</span>
+                <span>Pro</span>
+              </button>
+            )}
+
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -175,6 +201,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShortcuts }) => {
           })}
         </nav>
       </div>
+
+      {/* Spellbean Pro Modal */}
+      <UnlockProModal
+        isOpen={showUnlockModal}
+        onClose={() => setShowUnlockModal(false)}
+      />
     </header>
   );
 };

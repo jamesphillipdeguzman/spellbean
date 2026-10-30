@@ -7,11 +7,27 @@ import { WordBank } from './components/WordBank';
 import { SettingsModal } from './components/SettingsModal';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
 import { useSpellingStore } from './store/useSpellingStore';
+import { useLicenseStore } from './store/licenseStore';
 
 export const App: React.FC = () => {
   const activeTab = useSpellingStore((s) => s.activeTab);
   const darkMode = useSpellingStore((s) => s.settings.darkMode);
   const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Auto-Unlock Handler on PayMongo / Promo URL Redirect
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const isUnlockedParam = params.get('unlocked');
+    const keyParam = params.get('key');
+
+    if (isUnlockedParam === 'pro' || keyParam) {
+      useLicenseStore.getState().verifyKey(keyParam || 'PRO_ACTIVATED');
+      // Clear the URL params without reloading
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // Synchronize darkMode class on root
   useEffect(() => {
