@@ -21,14 +21,32 @@ export const SettingsModal: React.FC = () => {
   const store = useSpellingStore();
   const { settings, updateSettings, exportUserData, importUserData, resetAllProgress } = store;
 
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [groupedVoices, setGroupedVoices] = useState<{
+    philippine: SpeechSynthesisVoice[];
+    us: SpeechSynthesisVoice[];
+    otherEnglish: SpeechSynthesisVoice[];
+  }>({ philippine: [], us: [], otherEnglish: [] });
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const list = audioService.getEnUsVoices();
-    setVoices(list);
+    const updateVoiceList = () => {
+      const grouped = audioService.getGroupedVoices();
+      setGroupedVoices(grouped);
+    };
+
+    updateVoiceList();
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = updateVoiceList;
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
   }, []);
 
   const handleTestVoice = () => {
@@ -130,22 +148,66 @@ export const SettingsModal: React.FC = () => {
         </div>
 
         {/* Voice Selector */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-warm-600 dark:text-warm-300 block">
-            Proctor Voice (en-US Recommended):
-          </label>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-warm-600 dark:text-warm-300 block">
+              Proctor Voice (en-PH / en-US):
+            </label>
+            {groupedVoices.philippine.length > 0 && (
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 px-2 py-0.5 rounded-full border border-amber-300/60 flex items-center gap-1">
+                <span>🇵🇭</span> Local Proctor Detected
+              </span>
+            )}
+          </div>
+
           <select
             value={settings.selectedVoiceURI || ''}
             onChange={(e) => updateSettings({ selectedVoiceURI: e.target.value || null })}
-            className="w-full px-3 py-2 text-xs bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-800 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full px-3 py-2 text-xs bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-700 rounded-xl text-warm-800 dark:text-warm-100 focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
           >
-            <option value="">Default High-Clarity Voice</option>
-            {voices.map((v) => (
-              <option key={v.voiceURI} value={v.voiceURI}>
-                {v.name} ({v.lang})
-              </option>
-            ))}
+            <option value="">
+              {groupedVoices.philippine.length > 0
+                ? `Default (🇵🇭 ${groupedVoices.philippine[0].name} — Local Proctor)`
+                : 'Default (High-Clarity English Voice)'}
+            </option>
+
+            {groupedVoices.philippine.length > 0 && (
+              <optgroup label="🇵🇭 Philippine English / Filipino (en-PH)">
+                {groupedVoices.philippine.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    🇵🇭 {v.name} ({v.lang}) [Local Proctor]
+                  </option>
+                ))}
+              </optgroup>
+            )}
+
+            {groupedVoices.us.length > 0 && (
+              <optgroup label="🇺🇸 US English (en-US)">
+                {groupedVoices.us.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    🇺🇸 {v.name} ({v.lang})
+                  </option>
+                ))}
+              </optgroup>
+            )}
+
+            {groupedVoices.otherEnglish.length > 0 && (
+              <optgroup label="🌐 Other English Voices">
+                {groupedVoices.otherEnglish.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    🌐 {v.name} ({v.lang})
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
+
+          {/* Helpful Tip for Windows/Edge Users */}
+          <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-800/40 text-[11px] text-warm-600 dark:text-warm-300 leading-relaxed">
+            <p>
+              💡 <em>Tip: To enable natural Philippine English voices on Windows, go to <strong>Windows Settings &gt; Time &amp; Language &gt; Speech &gt; Add Voices &gt; English (Philippines)</strong>, or use Microsoft Edge.</em>
+            </p>
+          </div>
         </div>
 
         {/* Sliders: Rate & Pause */}

@@ -39,24 +39,80 @@ class AudioEngine {
     return this.voices;
   }
 
+  public isPhilippineVoice(v: SpeechSynthesisVoice): boolean {
+    const l = v.lang.toLowerCase();
+    const n = v.name.toLowerCase();
+    return (
+      l === 'en-ph' ||
+      l === 'en_ph' ||
+      l.startsWith('fil') ||
+      n.includes('philippines') ||
+      n.includes('filipino') ||
+      n.includes('angelo') ||
+      n.includes('rosa')
+    );
+  }
+
+  public getPhilippineVoices(): SpeechSynthesisVoice[] {
+    return this.getVoices().filter((v) => this.isPhilippineVoice(v));
+  }
+
   public getEnUsVoices(): SpeechSynthesisVoice[] {
-    const all = this.getVoices();
-    const enUs = all.filter((v) => v.lang.startsWith('en-US') || v.lang.startsWith('en_US'));
-    if (enUs.length > 0) return enUs;
-    return all.filter((v) => v.lang.startsWith('en'));
+    return this.getVoices().filter(
+      (v) => (v.lang.startsWith('en-US') || v.lang.startsWith('en_US')) && !this.isPhilippineVoice(v)
+    );
+  }
+
+  public getOtherEnglishVoices(): SpeechSynthesisVoice[] {
+    return this.getVoices().filter(
+      (v) =>
+        v.lang.toLowerCase().startsWith('en') &&
+        !this.isPhilippineVoice(v) &&
+        !v.lang.startsWith('en-US') &&
+        !v.lang.startsWith('en_US')
+    );
+  }
+
+  public getGroupedVoices(): {
+    philippine: SpeechSynthesisVoice[];
+    us: SpeechSynthesisVoice[];
+    otherEnglish: SpeechSynthesisVoice[];
+  } {
+    return {
+      philippine: this.getPhilippineVoices(),
+      us: this.getEnUsVoices(),
+      otherEnglish: this.getOtherEnglishVoices(),
+    };
   }
 
   public getDefaultVoice(): SpeechSynthesisVoice | null {
-    const enUs = this.getEnUsVoices();
-    if (enUs.length === 0) return this.voices[0] || null;
-
-    // Prefer high quality / natural voices if available
-    const preferredNames = ['Google US English', 'Samantha', 'Microsoft Jenny', 'Microsoft Guy', 'Microsoft David', 'Microsoft Zira', 'Alex'];
-    for (const name of preferredNames) {
-      const match = enUs.find((v) => v.name.includes(name));
-      if (match) return match;
+    // If a Philippine English voice is detected on the client device, prioritize it for local contest realism
+    const phVoices = this.getPhilippineVoices();
+    if (phVoices.length > 0) {
+      return phVoices[0];
     }
-    return enUs[0];
+
+    // Graceful fallback to US English voices
+    const enUs = this.getEnUsVoices();
+    if (enUs.length > 0) {
+      const preferredNames = [
+        'Google US English',
+        'Samantha',
+        'Microsoft Jenny',
+        'Microsoft Guy',
+        'Microsoft David',
+        'Microsoft Zira',
+        'Alex',
+      ];
+      for (const name of preferredNames) {
+        const match = enUs.find((v) => v.name.includes(name));
+        if (match) return match;
+      }
+      return enUs[0];
+    }
+
+    const all = this.getVoices();
+    return all[0] || null;
   }
 
   public stop() {
@@ -83,20 +139,20 @@ class AudioEngine {
     if (!this.synth) return;
     this.stop();
 
+    const voices = this.getVoices();
+    let voice: SpeechSynthesisVoice | null = null;
+    if (options.voiceURI) {
+      voice = voices.find((v) => v.voiceURI === options.voiceURI) || this.getDefaultVoice();
+    } else {
+      voice = this.getDefaultVoice();
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = options.rate ?? 0.85;
     utterance.pitch = options.pitch ?? 1.0;
     utterance.volume = options.volume ?? 1.0;
-    utterance.lang = 'en-US';
-
-    const voices = this.getVoices();
-    if (options.voiceURI) {
-      const selected = voices.find((v) => v.voiceURI === options.voiceURI);
-      if (selected) utterance.voice = selected;
-    } else {
-      const defaultVoice = this.getDefaultVoice();
-      if (defaultVoice) utterance.voice = defaultVoice;
-    }
+    utterance.lang = voice?.lang || 'en-US';
+    if (voice) utterance.voice = voice;
 
     utterance.onend = () => {
       this.currentUtterance = null;
@@ -144,12 +200,14 @@ class AudioEngine {
       voice = this.getDefaultVoice();
     }
 
+    const voiceLang = voice?.lang || 'en-US';
+
     // Step 1: First pronunciation
     const firstUtterance = new SpeechSynthesisUtterance(word);
     firstUtterance.rate = rate;
     firstUtterance.pitch = pitch;
     firstUtterance.volume = volume;
-    firstUtterance.lang = 'en-US';
+    firstUtterance.lang = voiceLang;
     if (voice) firstUtterance.voice = voice;
 
     callbacks.onStartFirst?.();
@@ -173,7 +231,7 @@ class AudioEngine {
           secondUtterance.rate = rate;
           secondUtterance.pitch = pitch;
           secondUtterance.volume = volume;
-          secondUtterance.lang = 'en-US';
+          secondUtterance.lang = voiceLang;
           if (voice) secondUtterance.voice = voice;
 
           secondUtterance.onend = () => {
