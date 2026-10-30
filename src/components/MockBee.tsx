@@ -15,7 +15,7 @@ import {
   Download,
   HelpCircle,
   Eye,
-  FileCheck,
+  FileText,
 } from 'lucide-react';
 import { useSpellingStore } from '../store/useSpellingStore';
 import { ProctorVoiceControls } from './ProctorVoiceControls';
@@ -149,24 +149,26 @@ export const MockBee: React.FC = () => {
           </div>
 
           {/* Practice Words Toggle */}
-          <div className="p-4 rounded-2xl bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-800 flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="font-semibold text-sm text-warm-900 dark:text-warm-100 flex items-center gap-2">
-                <FileCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                2 Unscored Practice Words
-              </span>
-              <p className="text-xs text-warm-500 dark:text-warm-400">
-                Convention Guidelines: Judges provide two warm-up practice words before competitive scoring begins.
-              </p>
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/60 dark:bg-slate-900/60 border border-slate-700/70 hover:border-slate-600 transition-colors">
+            <div className="flex items-start gap-3">
+              <FileText className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="text-sm font-bold text-slate-100 dark:text-white">
+                  2 Unscored Practice Words
+                </span>
+                <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  Convention Guidelines: Judges provide two warm-up practice words before competitive scoring begins.
+                </p>
+              </div>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
               <input
                 type="checkbox"
                 checked={includePractice}
                 onChange={(e) => setIncludePractice(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-warm-300 peer-focus:outline-none rounded-full peer dark:bg-warm-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-warm-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
           </div>
 
