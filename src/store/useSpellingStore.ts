@@ -49,6 +49,7 @@ interface SpellingState {
   updateWordNotes: (word: string, notes: string) => void;
   toggleStarWord: (word: string) => void;
   overrideWordStatus: (word: string, status: WordRecord['status']) => void;
+  toggleMissedVaultWord: (word: string) => void;
   addCustomWords: (newWords: string[]) => { addedCount: number; duplicateCount: number };
 
   // Actions - Daily Session
@@ -279,6 +280,24 @@ export const useSpellingStore = create<SpellingState>()(
               ...existing,
               status,
               consecutiveStreak: status === 'mastered' ? Math.max(3, existing.consecutiveStreak) : 0,
+            },
+          },
+        });
+      },
+
+      toggleMissedVaultWord: (wordRaw: string) => {
+        const key = wordRaw.toLowerCase();
+        const existing = get().words[key];
+        if (!existing) return;
+
+        const isCurrentlyInVault = existing.incorrectCount > 0 && existing.status !== 'mastered';
+        set({
+          words: {
+            ...get().words,
+            [key]: {
+              ...existing,
+              incorrectCount: isCurrentlyInVault ? 0 : Math.max(1, existing.incorrectCount + 1),
+              status: isCurrentlyInVault ? existing.status : 'learning',
             },
           },
         });
