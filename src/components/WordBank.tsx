@@ -100,6 +100,58 @@ export const WordBank: React.FC = () => {
   const endIndex = Math.min(startIndex + WORDS_PER_PAGE, totalItems);
   const currentBatchWords = filteredWords.slice(startIndex, endIndex);
 
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-2 py-4">
+        {/* Prev Button */}
+        <button
+          onClick={() => {
+            setCurrentPage((prev) => Math.max(prev - 1, 1));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          disabled={currentPage === 1}
+          className="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+        >
+          &larr; Prev
+        </button>
+
+        {/* Page Numbers */}
+        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => {
+                setCurrentPage(page);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                currentPage === page
+                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                  : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        {/* Next Button */}
+        <button
+          onClick={() => {
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          disabled={currentPage === totalPages}
+          className="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+        >
+          Next &rarr;
+        </button>
+      </div>
+    );
+  };
+
   const handlePronounce = (word: string, e: React.MouseEvent) => {
     e.stopPropagation();
     audioService.pronounceWordOfficialCadence(word, {
@@ -267,6 +319,11 @@ export const WordBank: React.FC = () => {
         )}
       </div>
 
+      {/* Top Pagination */}
+      <div className="mb-2">
+        {renderPagination()}
+      </div>
+
       {/* Word Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {currentBatchWords.map((record) => {
@@ -311,54 +368,10 @@ export const WordBank: React.FC = () => {
         })}
       </div>
 
-      {/* Pagination Controls UI */}
-      {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
-          {/* Previous Button */}
-          <button
-            onClick={() => {
-              setCurrentPage((prev) => Math.max(prev - 1, 1));
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            disabled={currentPage === 1}
-            className="px-3.5 py-2 text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
-          >
-            &larr; Prev
-          </button>
-
-          {/* Page Number Buttons */}
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => {
-                  setCurrentPage(page);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition cursor-pointer ${
-                  currentPage === page
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                    : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          {/* Next Button */}
-          <button
-            onClick={() => {
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            disabled={currentPage === totalPages}
-            className="px-3.5 py-2 text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
-          >
-            Next &rarr;
-          </button>
-        </div>
-      )}
+      {/* Bottom Pagination */}
+      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        {renderPagination()}
+      </div>
 
       {/* Free Tier Gating Banner */}
       {!isPro && (
