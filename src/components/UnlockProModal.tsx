@@ -214,7 +214,7 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
                     type="text"
                     value={licenseKey}
                     onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
-                    placeholder="E.G. SPELLCHAMP2027 OR PRO-XXXX"
+                    placeholder=""
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 dark:bg-slate-950/80 border border-slate-700 focus:border-amber-500 text-white dark:text-slate-100 placeholder-slate-500 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all uppercase"
                   />
                 </div>
@@ -229,11 +229,10 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
 
               {feedback && (
                 <div
-                  className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-                    feedback.success
-                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800'
-                      : 'bg-rose-950/60 text-rose-300 border border-rose-800'
-                  }`}
+                  className={`p-3 rounded-xl text-xs flex items-center gap-2 ${feedback.success
+                    ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800'
+                    : 'bg-rose-950/60 text-rose-300 border border-rose-800'
+                    }`}
                 >
                   {feedback.success ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
