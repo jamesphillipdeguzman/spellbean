@@ -18,7 +18,7 @@ import { WordModal } from './WordModal';
 
 export const MissedVault: React.FC = () => {
   const store = useSpellingStore();
-  const { words, startDailySession, settings } = store;
+  const { words, startMissedWordsQuiz, settings } = store;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWordForModal, setSelectedWordForModal] = useState<string | null>(null);
@@ -28,6 +28,7 @@ export const MissedVault: React.FC = () => {
   const missedList: WordRecord[] = Object.values(words).filter(
     (w) => w.incorrectCount > 0 && w.status !== 'mastered'
   );
+  const missedWords = missedList;
 
   const filteredList = missedList.filter((w) =>
     w.word.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
@@ -58,12 +59,28 @@ export const MissedVault: React.FC = () => {
     });
   };
 
-  const handleStartMissedDrill = () => {
-    startDailySession(Math.min(30, Math.max(10, filteredList.length)));
-  };
-
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn pb-16">
+      {/* 1. Missed Words Practice Action Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>⚠️</span> Missed Words Practice ({missedWords.length})
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Review your misspelled words or test yourself immediately to rebuild your streak.
+          </p>
+        </div>
+
+        <button
+          onClick={startMissedWordsQuiz}
+          disabled={missedWords.length === 0}
+          className="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+        >
+          <span>🎯</span> Quiz Missed Words Now
+        </button>
+      </div>
+
       {/* Hero Header */}
       <div className="bg-gradient-to-r from-rose-500 via-rose-600 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg shadow-rose-500/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2">
@@ -81,11 +98,11 @@ export const MissedVault: React.FC = () => {
 
         {missedList.length > 0 && (
           <button
-            onClick={handleStartMissedDrill}
-            className="w-full md:w-auto px-6 py-4 rounded-2xl bg-white text-rose-700 hover:bg-rose-50 font-bold text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 shrink-0"
+            onClick={startMissedWordsQuiz}
+            className="w-full md:w-auto px-6 py-4 rounded-2xl bg-white text-rose-700 hover:bg-rose-50 font-bold text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
           >
             <Play className="w-5 h-5 fill-current" />
-            <span>Drill Missed Words Only ({missedList.length})</span>
+            <span>Quiz Missed Words ({missedList.length})</span>
           </button>
         )}
       </div>

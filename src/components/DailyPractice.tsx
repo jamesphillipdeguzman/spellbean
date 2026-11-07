@@ -31,12 +31,14 @@ export const DailyPractice: React.FC = () => {
     dailySessionResults,
     isDailySessionActive,
     dailySessionCompleted,
+    dailySessionType,
     todayCompletedCount,
     consecutiveDaysStreak,
     settings,
     getDailyTargetQuota,
     getRemainingDaysUntilTarget,
     startDailySession,
+    startMissedWordsQuiz,
     submitDailyWord,
     nextDailyWord,
     previousDailyWord,
@@ -391,6 +393,8 @@ export const DailyPractice: React.FC = () => {
 
   // Active Session Complete Summary Screen
   if (dailySessionCompleted) {
+    const isMissedVaultQuiz = dailySessionType === 'missed_vault';
+
     return (
       <div className="max-w-2xl mx-auto space-y-6 text-center animate-fadeIn py-6">
         <div className="w-20 h-20 rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
@@ -399,10 +403,12 @@ export const DailyPractice: React.FC = () => {
 
         <div className="space-y-2">
           <h2 className="text-3xl font-extrabold font-serif text-warm-900 dark:text-warm-50">
-            Practice Batch Completed!
+            {isMissedVaultQuiz ? 'Missed Words Quiz Completed!' : 'Practice Batch Completed!'}
           </h2>
           <p className="text-warm-600 dark:text-warm-300 text-sm">
-            Outstanding dedication! You practiced {dailySessionWords.length} words in this session.
+            {isMissedVaultQuiz
+              ? `Outstanding effort! You reviewed and drilled ${dailySessionWords.length} words from your Missed Vault.`
+              : `Outstanding dedication! You practiced ${dailySessionWords.length} words in this session.`}
           </p>
         </div>
 
@@ -416,7 +422,7 @@ export const DailyPractice: React.FC = () => {
               </span>
             </div>
             <div className="p-3 rounded-2xl bg-warm-50 dark:bg-warm-850">
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 block">Batch Accuracy</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 block">Accuracy</span>
               <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                 {sessionAccuracy}%
               </span>
@@ -432,19 +438,50 @@ export const DailyPractice: React.FC = () => {
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button
-            onClick={() => startDailySession(batchSizeChoice)}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Practice Another Batch</span>
-          </button>
-          <button
-            onClick={endDailySession}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-warm-200 dark:bg-warm-800 hover:bg-warm-300 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-100 font-semibold text-sm transition-all"
-          >
-            Return to Dashboard
-          </button>
+          {isMissedVaultQuiz ? (
+            <>
+              <button
+                onClick={() => {
+                  const remainingMissed = store.getMissedWords();
+                  if (remainingMissed.length > 0) {
+                    startMissedWordsQuiz();
+                  } else {
+                    endDailySession();
+                    setActiveTab('vault');
+                  }
+                }}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Practice Again</span>
+              </button>
+              <button
+                onClick={() => {
+                  endDailySession();
+                  setActiveTab('vault');
+                }}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-warm-200 dark:bg-warm-800 hover:bg-warm-300 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-100 font-semibold text-sm transition-all cursor-pointer"
+              >
+                Return to Vault
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => startDailySession(batchSizeChoice)}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Practice Another Batch</span>
+              </button>
+              <button
+                onClick={endDailySession}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-warm-200 dark:bg-warm-800 hover:bg-warm-300 dark:hover:bg-warm-700 text-warm-800 dark:text-warm-100 font-semibold text-sm transition-all cursor-pointer"
+              >
+                Return to Dashboard
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -457,13 +494,18 @@ export const DailyPractice: React.FC = () => {
       <div className="flex items-center justify-between gap-4 bg-white dark:bg-warm-900 px-5 py-3.5 rounded-2xl border border-warm-200 dark:border-warm-800 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-2.5 py-1 rounded-lg">
-            Word {dailySessionIndex + 1} of {dailySessionWords.length}
+            {dailySessionType === 'missed_vault' ? 'Missed Drill: ' : ''}Word {dailySessionIndex + 1} of {dailySessionWords.length}
           </span>
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-warm-500 dark:text-warm-400">
             <span>Consecutive Streak:</span>
             <span className="font-bold text-warm-800 dark:text-warm-100">
               {currentRecord?.consecutiveStreak || 0} / 3
             </span>
+            {currentRecord && currentRecord.consecutiveStreak >= 3 && (
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold ml-1">
+                (Graduated! 🎓)
+              </span>
+            )}
           </div>
         </div>
 
@@ -580,7 +622,10 @@ export const DailyPractice: React.FC = () => {
                       {lastSubmittedResult ? (
                         <>
                           <CheckCircle2 className="w-5 h-5" />
-                          <span>Logged: Correct! Streak updated ({currentRecord?.consecutiveStreak} / 3).</span>
+                          <span>
+                            Logged: Correct! Streak updated ({currentRecord?.consecutiveStreak} / 3).
+                            {currentRecord && currentRecord.consecutiveStreak >= 3 && ' 🎓 Mastered & Graduated from Vault!'}
+                          </span>
                         </>
                       ) : (
                         <>
@@ -645,6 +690,13 @@ export const DailyPractice: React.FC = () => {
             {hasEvaluated && (
               <div className="space-y-4 animate-fadeIn">
                 <DiffViewer userInput={typedInput} expectedWord={currentWord} />
+
+                {lastSubmittedResult && currentRecord && currentRecord.consecutiveStreak >= 3 && (
+                  <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 max-w-md mx-auto">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>🎓 3/3 Streak Mastered! Graduated from Missed Vault!</span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-center gap-3 pt-2">
                   <button

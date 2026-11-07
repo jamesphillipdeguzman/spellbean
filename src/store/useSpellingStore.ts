@@ -28,6 +28,7 @@ interface SpellingState {
   dailySessionResults: Record<string, boolean>; // word -> correct/incorrect
   isDailySessionActive: boolean;
   dailySessionCompleted: boolean;
+  dailySessionType: 'daily' | 'missed_vault';
   todayCompletedCount: number;
   lastActiveDate: string;
   consecutiveDaysStreak: number;
@@ -56,6 +57,7 @@ interface SpellingState {
 
   // Actions - Daily Session
   startDailySession: (batchSize?: number) => void;
+  startMissedWordsQuiz: () => void;
   submitDailyWord: (word: string, isCorrect: boolean) => void;
   nextDailyWord: () => void;
   previousDailyWord: () => void;
@@ -134,6 +136,7 @@ export const useSpellingStore = create<SpellingState>()(
       dailySessionResults: {},
       isDailySessionActive: false,
       dailySessionCompleted: false,
+      dailySessionType: 'daily',
       todayCompletedCount: 0,
       lastActiveDate: '',
       consecutiveDaysStreak: 0,
@@ -393,6 +396,30 @@ export const useSpellingStore = create<SpellingState>()(
           dailySessionResults: {},
           isDailySessionActive: true,
           dailySessionCompleted: false,
+          dailySessionType: 'daily',
+          activeTab: 'daily',
+        });
+      },
+
+      startMissedWordsQuiz: () => {
+        const state = get();
+        // Load only the words currently in the Missed Vault into the active quiz queue
+        const missed = Object.values(state.words)
+          .filter((w) => w.incorrectCount > 0 && w.status !== 'mastered')
+          .sort((a, b) => b.incorrectCount - a.incorrectCount);
+
+        if (missed.length === 0) return;
+
+        const missedWords = missed.map((w) => w.word);
+
+        set({
+          dailySessionWords: missedWords,
+          dailySessionIndex: 0,
+          dailySessionResults: {},
+          isDailySessionActive: true,
+          dailySessionCompleted: false,
+          dailySessionType: 'missed_vault',
+          activeTab: 'daily',
         });
       },
 
@@ -436,6 +463,7 @@ export const useSpellingStore = create<SpellingState>()(
           dailySessionWords: [],
           dailySessionIndex: 0,
           dailySessionResults: {},
+          dailySessionType: 'daily',
         });
       },
 
@@ -675,4 +703,6 @@ export const useSpellingStore = create<SpellingState>()(
     }
   )
 );
+
+export const useStudyStore = useSpellingStore;
 
