@@ -65,20 +65,24 @@ export const DailyPractice: React.FC = () => {
   const unmasteredCount = Object.values(words).filter((w) => w.status !== 'mastered').length;
   const masteredCount = Object.values(words).filter((w) => w.status === 'mastered').length;
 
-  // Whenever current word index changes, reset inputs
-  useEffect(() => {
+  const resetWordInteractionState = () => {
     setTypedInput('');
     setHasEvaluated(false);
     setIsPaperRevealed(false);
     setLastSubmittedResult(null);
+  };
+
+  // Whenever current word, index, session, or mode changes, reset inputs & reveal state
+  useEffect(() => {
+    resetWordInteractionState();
 
     // Focus input for typing mode
-    if (inputMode === 'typing') {
+    if (inputMode === 'typing' && isDailySessionActive && !dailySessionCompleted) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [dailySessionIndex, isDailySessionActive, inputMode]);
+  }, [dailySessionIndex, isDailySessionActive, inputMode, currentWord, dailySessionWords, dailySessionCompleted]);
 
   // Trigger celebration on session complete
   useEffect(() => {
@@ -97,6 +101,8 @@ export const DailyPractice: React.FC = () => {
   // Global keydown handler for fast drills
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isDailySessionActive || dailySessionCompleted) return;
+
       // Don't intercept if user is typing in userNotes or other inputs
       const target = e.target as HTMLElement;
       const isInputFocused = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
@@ -107,25 +113,24 @@ export const DailyPractice: React.FC = () => {
         // Handled inside ProctorVoiceControls
       }
 
-      // Enter key
-      if (e.key === 'Enter') {
-        if (inputMode === 'paper') {
-          if (!isPaperRevealed) {
-            e.preventDefault();
-            setIsPaperRevealed(true);
-            audioService.playClickTone();
-          }
+      // Enter key: reveal spelling in Pen & Paper mode when still in Stage A
+      if (e.key === 'Enter' && inputMode === 'paper' && !isPaperRevealed) {
+        const isOtherButton = target?.tagName === 'BUTTON' && !target.dataset.revealBtn;
+        if (!isOtherButton) {
+          e.preventDefault();
+          setIsPaperRevealed(true);
+          audioService.playClickTone();
         }
       }
 
       // 1: Got it (in paper mode revealed)
-      if (e.key === '1' && inputMode === 'paper' && isPaperRevealed && !hasEvaluated) {
+      if (e.key === '1' && inputMode === 'paper' && isPaperRevealed && !hasEvaluated && !isInputFocused) {
         e.preventDefault();
         handlePaperReport(true);
       }
 
       // 2: Missed it (in paper mode revealed)
-      if (e.key === '2' && inputMode === 'paper' && isPaperRevealed && !hasEvaluated) {
+      if (e.key === '2' && inputMode === 'paper' && isPaperRevealed && !hasEvaluated && !isInputFocused) {
         e.preventDefault();
         handlePaperReport(false);
       }
@@ -133,7 +138,7 @@ export const DailyPractice: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [inputMode, isPaperRevealed, hasEvaluated, currentWord]);
+  }, [isDailySessionActive, dailySessionCompleted, inputMode, isPaperRevealed, hasEvaluated, currentWord, settings.soundEffects]);
 
   // Handle typing submission
   const handleTypingSubmit = (e: React.FormEvent) => {
@@ -152,8 +157,9 @@ export const DailyPractice: React.FC = () => {
     }
   };
 
-  // Handle paper self-reporting
+  // Handle paper self-reporting (only allowed after spelling is revealed)
   const handlePaperReport = (isCorrect: boolean) => {
+    if (!isPaperRevealed || hasEvaluated) return;
     setHasEvaluated(true);
     setLastSubmittedResult(isCorrect);
     submitDailyWord(currentWord, isCorrect);
@@ -166,7 +172,13 @@ export const DailyPractice: React.FC = () => {
   };
 
   const handleNextWord = () => {
+    resetWordInteractionState();
     nextDailyWord();
+  };
+
+  const handlePreviousWord = () => {
+    resetWordInteractionState();
+    previousDailyWord();
   };
 
   // Mode Switcher toggle
@@ -352,7 +364,7 @@ export const DailyPractice: React.FC = () => {
                   className={`p-4 rounded-2xl border text-center transition-all ${
                     batchSizeChoice === size
                       ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 shadow-sm ring-2 ring-amber-500/20'
-                      : 'border-warm-200 dark:border-warm-800 hover:bg-warm-50 dark:hover:bg-warm-850 text-warm-700 dark:text-warm-300'
+                      : 'border-warm-200 dark:border-warm-800 hover:bg-warm-50 dark:hover:bg-warm-800 text-warm-700 dark:text-warm-300'
                   }`}
                 >
                   <div className="text-2xl font-black">{size}</div>
@@ -365,7 +377,7 @@ export const DailyPractice: React.FC = () => {
           </div>
 
           {/* Ratio breakdown indicator */}
-          <div className="p-4 rounded-2xl bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-800 flex items-center justify-between text-xs text-warm-600 dark:text-warm-300">
+          <div className="p-4 rounded-2xl bg-warm-50 dark:bg-slate-800/60 border border-warm-200 dark:border-warm-800 flex items-center justify-between text-xs text-warm-600 dark:text-warm-300">
             <span className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               {Math.round(batchSizeChoice * 0.7)} Unmastered & New Words
@@ -415,19 +427,19 @@ export const DailyPractice: React.FC = () => {
         {/* Scorecard */}
         <div className="p-6 rounded-3xl bg-white dark:bg-warm-900 border border-warm-200 dark:border-warm-800 shadow-sm space-y-4">
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-3 rounded-2xl bg-warm-50 dark:bg-warm-850">
+            <div className="p-3 rounded-2xl bg-warm-50 dark:bg-slate-800/60">
               <span className="text-xs text-warm-500 dark:text-warm-400 block">Total Recalled</span>
               <span className="text-2xl font-bold text-warm-900 dark:text-warm-100">
                 {sessionCorrectCount} / {dailySessionWords.length}
               </span>
             </div>
-            <div className="p-3 rounded-2xl bg-warm-50 dark:bg-warm-850">
+            <div className="p-3 rounded-2xl bg-warm-50 dark:bg-slate-800/60">
               <span className="text-xs text-emerald-600 dark:text-emerald-400 block">Accuracy</span>
               <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                 {sessionAccuracy}%
               </span>
             </div>
-            <div className="p-3 rounded-2xl bg-warm-50 dark:bg-warm-850">
+            <div className="p-3 rounded-2xl bg-warm-50 dark:bg-slate-800/60">
               <span className="text-xs text-amber-600 dark:text-amber-400 block">Daily Quota</span>
               <span className="text-2xl font-bold text-amber-700 dark:text-amber-300">
                 {todayCompletedCount} / {targetQuota}
@@ -550,62 +562,66 @@ export const DailyPractice: React.FC = () => {
         {/* Mode A: Pen & Paper (Contest Replication) */}
         {inputMode === 'paper' && (
           <div className="pt-4 border-t border-warm-100 dark:border-warm-800 space-y-6 text-center">
-            <div className="p-4 rounded-2xl bg-warm-50 dark:bg-warm-850 border border-dashed border-warm-300 dark:border-warm-700 max-w-md mx-auto">
-              <span className="text-xs font-semibold text-warm-500 dark:text-warm-400 block mb-1">
-                Contest Simulation (Pen & Paper)
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-dashed border-slate-300 dark:border-slate-700 max-w-md mx-auto">
+              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block mb-1">
+                Contest Simulation (Pen &amp; Paper)
               </span>
-              <p className="text-sm text-warm-700 dark:text-warm-300">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Listen to the proctor and write the word on your paper.
               </p>
-              <span className="inline-block mt-2 text-xs font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full">
+              <span className="inline-block mt-2.5 text-xs font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800/60 px-2.5 py-0.5 rounded-full">
                 Letter count: {currentWord.length} letters
               </span>
             </div>
 
-            {/* Hidden vs Revealed */}
+            {/* Stage A (Hidden) vs Stage B & C (Revealed) */}
             {!isPaperRevealed ? (
               <div className="space-y-4">
                 <button
+                  type="button"
+                  data-reveal-btn="true"
                   onClick={() => setIsPaperRevealed(true)}
-                  className="px-8 py-4 rounded-2xl bg-warm-900 hover:bg-warm-800 dark:bg-warm-100 dark:hover:bg-white text-white dark:text-warm-900 font-bold text-base shadow-md transition-all active:scale-95 inline-flex items-center gap-2"
+                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-base shadow-md transition-all active:scale-95 inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Eye className="w-5 h-5 text-amber-500" />
+                  <Eye className="w-5 h-5 text-amber-500 shrink-0" />
                   <span>Reveal Official Spelling</span>
-                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-warm-700 dark:bg-warm-300 text-warm-200 dark:text-warm-800 rounded">
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-slate-700 dark:bg-slate-300 text-slate-200 dark:text-slate-800 rounded">
                     Enter
                   </kbd>
                 </button>
               </div>
             ) : (
               <div className="space-y-6 animate-fadeIn">
-                <div className="p-6 rounded-3xl bg-warm-50 dark:bg-warm-850 border border-warm-200 dark:border-warm-750">
-                  <span className="text-xs uppercase font-bold tracking-wider text-warm-500 dark:text-warm-400 block mb-2">
+                <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <span className="text-xs uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
                     Official Spelling
                   </span>
-                  <div className="text-4xl sm:text-5xl font-black font-mono tracking-wider text-warm-950 dark:text-warm-50">
+                  <div className="text-3xl sm:text-4xl md:text-5xl font-black font-mono tracking-wide sm:tracking-wider text-slate-900 dark:text-white break-words">
                     {currentWord}
                   </div>
                 </div>
 
                 {/* Self Report Actions */}
                 {!hasEvaluated ? (
-                  <div className="space-y-2">
-                    <span className="text-xs font-semibold text-warm-600 dark:text-warm-300 block">
+                  <div className="space-y-3">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block">
                       Did your paper match the official spelling?
                     </span>
-                    <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center justify-center gap-3 sm:gap-4">
                       <button
+                        type="button"
                         onClick={() => handlePaperReport(true)}
-                        className="flex-1 max-w-[200px] py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-1 max-w-[200px] min-h-[48px] py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <CheckCircle2 className="w-5 h-5" />
+                        <CheckCircle2 className="w-5 h-5 shrink-0" />
                         <span>Got It (1)</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() => handlePaperReport(false)}
-                        className="flex-1 max-w-[200px] py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-1 max-w-[200px] min-h-[48px] py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <XCircle className="w-5 h-5" />
+                        <XCircle className="w-5 h-5 shrink-0" />
                         <span>Missed It (2)</span>
                       </button>
                     </div>
@@ -621,7 +637,7 @@ export const DailyPractice: React.FC = () => {
                     >
                       {lastSubmittedResult ? (
                         <>
-                          <CheckCircle2 className="w-5 h-5" />
+                          <CheckCircle2 className="w-5 h-5 shrink-0" />
                           <span>
                             Logged: Correct! Streak updated ({currentRecord?.consecutiveStreak} / 3).
                             {currentRecord && currentRecord.consecutiveStreak >= 3 && ' 🎓 Mastered & Graduated from Vault!'}
@@ -629,15 +645,16 @@ export const DailyPractice: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <XCircle className="w-5 h-5" />
+                          <XCircle className="w-5 h-5 shrink-0" />
                           <span>Logged: Missed. Added to your Missed Words Vault for review.</span>
                         </>
                       )}
                     </div>
                     <div>
                       <button
+                        type="button"
                         onClick={handleNextWord}
-                        className="px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all inline-flex items-center gap-2"
+                        className="px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all inline-flex items-center gap-2 cursor-pointer"
                       >
                         <span>Next Word</span>
                         <ChevronRight className="w-4 h-4" />
@@ -716,7 +733,7 @@ export const DailyPractice: React.FC = () => {
       {/* Footer Navigation */}
       <div className="flex items-center justify-between text-xs text-warm-500 dark:text-warm-400">
         <button
-          onClick={previousDailyWord}
+          onClick={handlePreviousWord}
           disabled={dailySessionIndex === 0}
           className="inline-flex items-center gap-1 hover:text-warm-800 dark:hover:text-warm-200 disabled:opacity-40"
         >
