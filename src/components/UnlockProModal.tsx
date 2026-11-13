@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -166,15 +167,17 @@ export const UnlockProModal: React.FC<UnlockProModalProps> = ({
             <p className="text-xs text-emerald-600 dark:text-emerald-400">
               License: <span className="font-mono font-bold">{licenseCode || 'LIFETIME'}</span>
             </p>
-            <button
-              onClick={() => {
-                relockPro();
-                setFeedback({ success: false, message: 'Pro relocked for testing.' });
-              }}
-              className="text-[11px] text-warm-400 hover:text-warm-600 underline pt-1"
-            >
-              Relock (Development Test)
-            </button>
+            {import.meta.env.DEV && (
+              <button
+                onClick={() => {
+                  relockPro();
+                  setFeedback({ success: false, message: 'Pro relocked for testing.' });
+                }}
+                className="text-[11px] text-warm-400 hover:text-warm-600 underline pt-1"
+              >
+                Relock (Development Test)
+              </button>
+            )}
           </div>
         ) : (
           <>
